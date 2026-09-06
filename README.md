@@ -12,6 +12,8 @@ A restrained driving-information prototype for Android Auto, with a companion da
 
 Every vehicle value is optional. Android Auto and the head unit decide which properties an app receives; unavailable data is shown as an em dash rather than guessed. The clock always works.
 
+See [2021 CX-5 data availability](docs/MAZDA_DATA.md) for the model-specific research and confidence matrix.
+
 ## Compatibility
 
 - Phone: Android 9 (API 28) or newer; sized responsively for Pixel 7 and Pixel 7a
@@ -30,6 +32,8 @@ Requirements: JDK 17 and Android SDK 36.
 
 The APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
 
+For a ready-to-install build, download [`releases/motoring-dashboard-v0.1.0.apk`](releases/motoring-dashboard-v0.1.0.apk). This prototype is signed with an Android development certificate for sideloading; it is not a production Play Store signature.
+
 ## Run on Pixel 7 / 7a and Mazda CX-5
 
 1. Enable Android Auto developer mode on the phone: Android Auto settings → tap **Version** repeatedly → menu → **Developer settings**.
@@ -43,6 +47,12 @@ The APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
 4. Open **Motoring Dashboard** once on the phone.
 5. Connect the Pixel to the Mazda using the infotainment USB port and a data-capable USB cable, then launch Android Auto.
 6. Open Motoring Dashboard in the Android Auto launcher and choose **Allow vehicle data**. Grant only the vehicle permissions you want to share.
+
+To install the checked-in prototype release instead, download it to the computer and run:
+
+```bash
+adb install -r motoring-dashboard-v0.1.0.apk
+```
 
 Wireless Android Auto availability depends on the Mazda infotainment firmware and regional configuration; USB projection is the baseline supported path for this project.
 

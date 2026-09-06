@@ -21,6 +21,8 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            // Sideloadable prototype: use Android's development certificate, not a production key.
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -32,6 +34,13 @@ android {
     buildFeatures { compose = true }
 
     packaging.resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
+}
+
+tasks.register<Copy>("stagePrototypeRelease") {
+    dependsOn("assembleRelease")
+    from(layout.buildDirectory.file("outputs/apk/release/app-release.apk"))
+    into(rootProject.layout.projectDirectory.dir("releases"))
+    rename { "motoring-dashboard-v0.1.0.apk" }
 }
 
 kotlin {

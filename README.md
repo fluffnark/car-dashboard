@@ -17,10 +17,10 @@ See [2021 CX-5 data availability](docs/MAZDA_DATA.md) for the model-specific res
 ## Compatibility
 
 - Phone: Android 9 (API 28) or newer; sized responsively for Pixel 7 and Pixel 7a
-- Projection: Android Auto with Car App API level 3 or newer
+- Projection: Android Auto with Car App API level 8 or newer
 - Target vehicle: 2021 Mazda CX-5 Grand Touring with its factory Android Auto-compatible infotainment system
 
-This is a developer prototype, not a Google Play-ready product. Google does not provide a general dashboard app category. The projected experience uses the closest templated category for development and must be sideloaded with Android Auto developer mode enabled. A production release would need a supported core purpose and Google Play car-app review. The Mazda may withhold some or all vehicle properties; this is normal and cannot be bypassed by the app.
+This is a developer prototype of a templated media app. Android Auto does not provide a general-purpose dashboard category, so the app combines a real media session with a host-rendered information dashboard. The Mazda may withhold some or all vehicle properties; this is normal and cannot be bypassed by the app.
 
 ## Build
 
@@ -32,25 +32,22 @@ Requirements: JDK 17 and Android SDK 36.
 
 The APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
 
-The current car-screen concept is [`releases/motoring-dashboard-v0.2.0.apk`](releases/motoring-dashboard-v0.2.0.apk). It declares a standard Android Auto media browser and presents three visual-design programs through Android Auto's native library and Now Playing surfaces. Upload [`releases/motoring-dashboard-v0.2.0.aab`](releases/motoring-dashboard-v0.2.0.aab) to Play Console. Both are signed with the project's release upload key, not Android's debug certificate.
+The current car-screen concept is [`releases/motoring-dashboard-v0.3.0.apk`](releases/motoring-dashboard-v0.3.0.apk). Upload [`releases/motoring-dashboard-v0.3.0.aab`](releases/motoring-dashboard-v0.3.0.aab) to the existing Play Console internal-test track. Both are signed with the project's release upload key, not Android's debug certificate.
+
+Version 0.3 restores the actual dashboard as the Android Auto entry screen. It declares both templated-media and media-browser capabilities, shows time and available Mazda data in a `PaneTemplate`, and places Android Auto's compact media-playback action in the header. Exact typography, spacing, and playback presentation remain controlled by the Android Auto host for driver safety.
 
 The private upload key and its properties live in the ignored `signing/` directory. Preserve both files securely: every future Play update must use the same upload key. They are intentionally never committed.
 
 ## Run on Pixel 7 / 7a and Mazda CX-5
 
-1. Enable Android Auto developer mode on the phone: Android Auto settings → tap **Version** repeatedly → menu → **Developer settings**.
-2. In Developer settings, enable **Unknown sources**.
-3. Enable USB debugging in the phone's Android developer options and install the debug build:
+1. Upload the v0.3 AAB to the same Play Console internal-test track and publish the release.
+2. Open the track's tester opt-in link with the enrolled Google account on the Pixel, then install or update Motoring Dashboard from Google Play.
+3. Open **Motoring Dashboard** once on the phone.
+4. Connect the Pixel to the Mazda using the infotainment USB port and a data-capable USB cable, then launch Android Auto.
+5. In Android Auto settings, open **Customize launcher** and ensure Motoring Dashboard is enabled. Reconnect the phone after changing this setting.
+6. Open Motoring Dashboard on the Mazda and choose **Allow vehicle data**. Grant only the vehicle permissions you want to share.
 
-   ```bash
-   adb install -r releases/motoring-dashboard-v0.2.0.apk
-   ```
-
-4. Open **Motoring Dashboard** once on the phone.
-5. Connect the Pixel to the Mazda using the infotainment USB port and a data-capable USB cable, then launch Android Auto.
-6. Open Motoring Dashboard in the Android Auto launcher and choose **Allow vehicle data**. Grant only the vehicle permissions you want to share.
-
-Because v0.2 is a standard media app, Android Auto's **Unknown sources** developer option can discover a directly installed APK. In Android Auto settings, open **Customize launcher** and ensure Motoring Dashboard is enabled before reconnecting the phone.
+The standalone APK remains useful for phone installation and inspection, but Android Auto only accepts the templated service from a trusted distribution source. Use the Play internal-test build for the Mazda. The media-browser fallback can still appear as a conventional Now Playing screen on hosts that do not support templated media.
 
 Wireless Android Auto availability depends on the Mazda infotainment firmware and regional configuration; USB projection is the baseline supported path for this project.
 
@@ -69,7 +66,8 @@ Use the DHU sensor controls to simulate speed, fuel, range, mileage, and model v
 
 - `MainActivity`: responsive Compose companion UI
 - `DashboardCarAppService`: Android Auto entry point
-- `DashboardScreen`: safe `PaneTemplate` UI and Car Hardware listeners
+- `DashboardScreen`: safe `PaneTemplate` UI, compact media action, and Car Hardware listeners
+- `ConceptMediaService`: browsable media session used by Android Auto playback
 - `DashboardRepository`: in-process state shared by the projected and companion surfaces
 
 No network access, analytics, account, or background location is used.

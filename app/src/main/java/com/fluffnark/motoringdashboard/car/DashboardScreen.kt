@@ -1,7 +1,9 @@
 package com.fluffnark.motoringdashboard.car
 
+import android.content.ComponentName
 import android.os.Handler
 import android.os.Looper
+import android.support.v4.media.MediaBrowserCompat
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
 import androidx.car.app.hardware.CarHardwareManager
@@ -11,7 +13,9 @@ import androidx.car.app.hardware.info.EnergyLevel
 import androidx.car.app.hardware.info.Mileage
 import androidx.car.app.hardware.info.Model
 import androidx.car.app.hardware.info.Speed
+import androidx.car.app.media.MediaPlaybackManager
 import androidx.car.app.model.Action
+import androidx.car.app.model.Header
 import androidx.car.app.model.Pane
 import androidx.car.app.model.PaneTemplate
 import androidx.car.app.model.Row
@@ -20,6 +24,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.fluffnark.motoringdashboard.data.DashboardFormat
 import com.fluffnark.motoringdashboard.data.DashboardRepository
+import com.fluffnark.motoringdashboard.media.ConceptMediaService
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -32,6 +37,16 @@ class DashboardScreen(carContext: CarContext) : Screen(carContext), DefaultLifec
     private val carInfo = carContext.getCarService(CarHardwareManager::class.java).carInfo
     private val handler = Handler(Looper.getMainLooper())
     private var listenersRegistered = false
+    private var mediaBrowser: MediaBrowserCompat? = null
+
+    private val mediaConnection = object : MediaBrowserCompat.ConnectionCallback() {
+        override fun onConnected() {
+            val browser = mediaBrowser ?: return
+            carContext.getCarService(MediaPlaybackManager::class.java)
+                .registerMediaPlaybackToken(browser.sessionToken)
+            invalidate()
+        }
+    }
 
     private val minuteTicker = object : Runnable {
         override fun run() {
@@ -82,13 +97,26 @@ class DashboardScreen(carContext: CarContext) : Screen(carContext), DefaultLifec
     override fun onStart(owner: LifecycleOwner) {
         DashboardRepository.setConnected(true)
         handler.post(minuteTicker)
+        connectMediaSession()
         registerListeners()
     }
 
     override fun onStop(owner: LifecycleOwner) {
         DashboardRepository.setConnected(false)
         handler.removeCallbacks(minuteTicker)
+        mediaBrowser?.disconnect()
+        mediaBrowser = null
         unregisterListeners()
+    }
+
+    private fun connectMediaSession() {
+        if (mediaBrowser != null) return
+        mediaBrowser = MediaBrowserCompat(
+            carContext,
+            ComponentName(carContext, ConceptMediaService::class.java),
+            mediaConnection,
+            null,
+        ).also(MediaBrowserCompat::connect)
     }
 
     private fun registerListeners() {
@@ -143,10 +171,14 @@ class DashboardScreen(carContext: CarContext) : Screen(carContext), DefaultLifec
             )
             .build()
 
-        @Suppress("DEPRECATION")
         return PaneTemplate.Builder(pane)
-            .setTitle("Motoring Dashboard")
-            .setHeaderAction(Action.APP_ICON)
+            .setHeader(
+                Header.Builder()
+                    .setTitle("Motoring Dashboard")
+                    .setStartHeaderAction(Action.APP_ICON)
+                    .addEndHeaderAction(Action.MEDIA_PLAYBACK)
+                    .build()
+            )
             .build()
     }
 

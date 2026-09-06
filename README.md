@@ -32,7 +32,7 @@ Requirements: JDK 17 and Android SDK 36.
 
 The APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
 
-For a ready-to-install build, download [`releases/motoring-dashboard-v0.1.0.apk`](releases/motoring-dashboard-v0.1.0.apk). This prototype is signed with an Android development certificate for sideloading; it is not a production Play Store signature.
+For a ready-to-install build, download [`releases/motoring-dashboard-v0.1.0.apk`](releases/motoring-dashboard-v0.1.0.apk). For Google Play Internal App Sharing, upload [`releases/motoring-dashboard-v0.1.0.aab`](releases/motoring-dashboard-v0.1.0.aab). These prototype artifacts are signed with an Android development certificate; Internal App Sharing accepts any signing key and re-signs uploaded artifacts with its own test certificate.
 
 ## Run on Pixel 7 / 7a and Mazda CX-5
 

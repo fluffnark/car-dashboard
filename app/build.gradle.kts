@@ -37,10 +37,12 @@ android {
 }
 
 tasks.register<Copy>("stagePrototypeRelease") {
-    dependsOn("assembleRelease")
+    dependsOn("assembleRelease", "bundleRelease")
     from(layout.buildDirectory.file("outputs/apk/release/app-release.apk"))
+    from(layout.buildDirectory.file("outputs/bundle/release/app-release.aab"))
     into(rootProject.layout.projectDirectory.dir("releases"))
-    rename { "motoring-dashboard-v0.1.0.apk" }
+    rename("app-release.apk", "motoring-dashboard-v0.1.0.apk")
+    rename("app-release.aab", "motoring-dashboard-v0.1.0.aab")
 }
 
 kotlin {

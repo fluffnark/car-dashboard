@@ -32,7 +32,9 @@ Requirements: JDK 17 and Android SDK 36.
 
 The APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
 
-For a ready-to-install build, download [`releases/motoring-dashboard-v0.1.0.apk`](releases/motoring-dashboard-v0.1.0.apk). For Google Play Internal App Sharing, upload [`releases/motoring-dashboard-v0.1.0.aab`](releases/motoring-dashboard-v0.1.0.aab). These prototype artifacts are signed with an Android development certificate; Internal App Sharing accepts any signing key and re-signs uploaded artifacts with its own test certificate.
+The current car-screen concept is [`releases/motoring-dashboard-v0.2.0.apk`](releases/motoring-dashboard-v0.2.0.apk). It declares a standard Android Auto media browser and presents three visual-design programs through Android Auto's native library and Now Playing surfaces. Upload [`releases/motoring-dashboard-v0.2.0.aab`](releases/motoring-dashboard-v0.2.0.aab) to Play Console. Both are signed with the project's release upload key, not Android's debug certificate.
+
+The private upload key and its properties live in the ignored `signing/` directory. Preserve both files securely: every future Play update must use the same upload key. They are intentionally never committed.
 
 ## Run on Pixel 7 / 7a and Mazda CX-5
 
@@ -41,18 +43,14 @@ For a ready-to-install build, download [`releases/motoring-dashboard-v0.1.0.apk`
 3. Enable USB debugging in the phone's Android developer options and install the debug build:
 
    ```bash
-   adb install -r app/build/outputs/apk/debug/app-debug.apk
+   adb install -r releases/motoring-dashboard-v0.2.0.apk
    ```
 
 4. Open **Motoring Dashboard** once on the phone.
 5. Connect the Pixel to the Mazda using the infotainment USB port and a data-capable USB cable, then launch Android Auto.
 6. Open Motoring Dashboard in the Android Auto launcher and choose **Allow vehicle data**. Grant only the vehicle permissions you want to share.
 
-To install the checked-in prototype release instead, download it to the computer and run:
-
-```bash
-adb install -r motoring-dashboard-v0.1.0.apk
-```
+Because v0.2 is a standard media app, Android Auto's **Unknown sources** developer option can discover a directly installed APK. In Android Auto settings, open **Customize launcher** and ensure Motoring Dashboard is enabled before reconnecting the phone.
 
 Wireless Android Auto availability depends on the Mazda infotainment firmware and regional configuration; USB projection is the baseline supported path for this project.
 

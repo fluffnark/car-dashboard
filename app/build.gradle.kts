@@ -1,7 +1,16 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+}
+
+val uploadPropertiesFile = rootProject.file("signing/upload-key.properties")
+val uploadProperties = Properties().apply {
+    if (uploadPropertiesFile.exists()) {
+        uploadPropertiesFile.inputStream().use(::load)
+    }
 }
 
 android {
@@ -12,17 +21,27 @@ android {
         applicationId = "com.fluffnark.motoringdashboard"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("upload") {
+            if (uploadPropertiesFile.exists()) {
+                storeFile = rootProject.file(uploadProperties.getProperty("storeFile"))
+                storePassword = uploadProperties.getProperty("storePassword")
+                keyAlias = uploadProperties.getProperty("keyAlias")
+                keyPassword = uploadProperties.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
-            // Sideloadable prototype: use Android's development certificate, not a production key.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("upload")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -41,8 +60,8 @@ tasks.register<Copy>("stagePrototypeRelease") {
     from(layout.buildDirectory.file("outputs/apk/release/app-release.apk"))
     from(layout.buildDirectory.file("outputs/bundle/release/app-release.aab"))
     into(rootProject.layout.projectDirectory.dir("releases"))
-    rename("app-release.apk", "motoring-dashboard-v0.1.0.apk")
-    rename("app-release.aab", "motoring-dashboard-v0.1.0.aab")
+    rename("app-release.apk", "motoring-dashboard-v0.2.0.apk")
+    rename("app-release.aab", "motoring-dashboard-v0.2.0.aab")
 }
 
 kotlin {
@@ -60,6 +79,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.3")
+    implementation("androidx.media:media:1.7.0")
 
     implementation("androidx.car.app:app:1.8.0-rc01")
     implementation("androidx.car.app:app-projected:1.8.0-rc01")

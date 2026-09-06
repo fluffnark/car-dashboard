@@ -2,6 +2,7 @@
 <resources>
     <style name="Theme.MotoringDashboard" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">@color/persimmon</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">@color/charcoal</item>
         <item name="android:statusBarColor">@color/charcoal</item>

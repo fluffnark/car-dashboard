@@ -1,6 +1,7 @@
 package com.fluffnark.motoringdashboard.car
 
 import android.content.ComponentName
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import android.support.v4.media.MediaBrowserCompat
@@ -20,6 +21,7 @@ import androidx.car.app.model.Pane
 import androidx.car.app.model.PaneTemplate
 import androidx.car.app.model.Row
 import androidx.car.app.model.Template
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.fluffnark.motoringdashboard.data.DashboardFormat
@@ -36,14 +38,29 @@ private const val CAR_MILEAGE = "com.google.android.gms.permission.CAR_MILEAGE"
 class DashboardScreen(carContext: CarContext) : Screen(carContext), DefaultLifecycleObserver {
     private val carInfo = carContext.getCarService(CarHardwareManager::class.java).carInfo
     private val handler = Handler(Looper.getMainLooper())
-    private var listenersRegistered = false
+    private var speedRegistered = false
+    private var energyRegistered = false
+    private var mileageRegistered = false
     private var mediaBrowser: MediaBrowserCompat? = null
+    private var mediaPlaybackReady = false
 
     private val mediaConnection = object : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
             val browser = mediaBrowser ?: return
-            carContext.getCarService(MediaPlaybackManager::class.java)
-                .registerMediaPlaybackToken(browser.sessionToken)
+            mediaPlaybackReady = runCatching {
+                carContext.getCarService(MediaPlaybackManager::class.java)
+                    .registerMediaPlaybackToken(browser.sessionToken)
+            }.isSuccess
+            invalidate()
+        }
+
+        override fun onConnectionSuspended() {
+            mediaPlaybackReady = false
+            invalidate()
+        }
+
+        override fun onConnectionFailed() {
+            mediaPlaybackReady = false
             invalidate()
         }
     }
@@ -106,6 +123,7 @@ class DashboardScreen(carContext: CarContext) : Screen(carContext), DefaultLifec
         handler.removeCallbacks(minuteTicker)
         mediaBrowser?.disconnect()
         mediaBrowser = null
+        mediaPlaybackReady = false
         unregisterListeners()
     }
 
@@ -120,22 +138,37 @@ class DashboardScreen(carContext: CarContext) : Screen(carContext), DefaultLifec
     }
 
     private fun registerListeners() {
-        if (listenersRegistered) return
-        listenersRegistered = true
         val executor = carContext.mainExecutor
-        carInfo.fetchModel(executor, modelListener)
-        carInfo.addSpeedListener(executor, speedListener)
-        carInfo.addEnergyLevelListener(executor, energyListener)
-        carInfo.addMileageListener(executor, mileageListener)
+        runCatching { carInfo.fetchModel(executor, modelListener) }
+
+        if (hasPermission(CAR_SPEED) && !speedRegistered) {
+            speedRegistered = runCatching {
+                carInfo.addSpeedListener(executor, speedListener)
+            }.isSuccess
+        }
+        if (hasPermission(CAR_FUEL) && !energyRegistered) {
+            energyRegistered = runCatching {
+                carInfo.addEnergyLevelListener(executor, energyListener)
+            }.isSuccess
+        }
+        if (hasPermission(CAR_MILEAGE) && !mileageRegistered) {
+            mileageRegistered = runCatching {
+                carInfo.addMileageListener(executor, mileageListener)
+            }.isSuccess
+        }
     }
 
     private fun unregisterListeners() {
-        if (!listenersRegistered) return
-        listenersRegistered = false
-        carInfo.removeSpeedListener(speedListener)
-        carInfo.removeEnergyLevelListener(energyListener)
-        carInfo.removeMileageListener(mileageListener)
+        if (speedRegistered) runCatching { carInfo.removeSpeedListener(speedListener) }
+        if (energyRegistered) runCatching { carInfo.removeEnergyLevelListener(energyListener) }
+        if (mileageRegistered) runCatching { carInfo.removeMileageListener(mileageListener) }
+        speedRegistered = false
+        energyRegistered = false
+        mileageRegistered = false
     }
+
+    private fun hasPermission(permission: String): Boolean =
+        ContextCompat.checkSelfPermission(carContext, permission) == PackageManager.PERMISSION_GRANTED
 
     override fun onGetTemplate(): Template {
         val state = DashboardRepository.state.value
@@ -171,14 +204,17 @@ class DashboardScreen(carContext: CarContext) : Screen(carContext), DefaultLifec
             )
             .build()
 
+        val header = Header.Builder()
+            .setTitle("Motoring Dashboard")
+            .setStartHeaderAction(Action.APP_ICON)
+            .apply {
+                // Hosts reject this action until a media token has been registered.
+                if (mediaPlaybackReady) addEndHeaderAction(Action.MEDIA_PLAYBACK)
+            }
+            .build()
+
         return PaneTemplate.Builder(pane)
-            .setHeader(
-                Header.Builder()
-                    .setTitle("Motoring Dashboard")
-                    .setStartHeaderAction(Action.APP_ICON)
-                    .addEndHeaderAction(Action.MEDIA_PLAYBACK)
-                    .build()
-            )
+            .setHeader(header)
             .build()
     }
 

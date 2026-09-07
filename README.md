@@ -32,15 +32,15 @@ Requirements: JDK 17 and Android SDK 36.
 
 The APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
 
-The current car-screen concept is [`releases/motoring-dashboard-v0.3.0.apk`](releases/motoring-dashboard-v0.3.0.apk). Upload [`releases/motoring-dashboard-v0.3.0.aab`](releases/motoring-dashboard-v0.3.0.aab) to the existing Play Console internal-test track. Both are signed with the project's release upload key, not Android's debug certificate.
+The current car-screen concept is [`releases/motoring-dashboard-v0.3.1.apk`](releases/motoring-dashboard-v0.3.1.apk). Upload [`releases/motoring-dashboard-v0.3.1.aab`](releases/motoring-dashboard-v0.3.1.aab) to the existing Play Console internal-test track. Both are signed with the project's release upload key, not Android's debug certificate.
 
-Version 0.3 restores the actual dashboard as the Android Auto entry screen. It declares both templated-media and media-browser capabilities, shows time and available Mazda data in a `PaneTemplate`, and places Android Auto's compact media-playback action in the header. Exact typography, spacing, and playback presentation remain controlled by the Android Auto host for driver safety.
+Version 0.3.1 restores the actual dashboard as the Android Auto entry screen. It declares both templated-media and media-browser capabilities, shows time and available Mazda data in a `PaneTemplate`, and places Android Auto's compact media-playback action in the header after the media session is ready. Exact typography, spacing, and playback presentation remain controlled by the Android Auto host for driver safety.
 
 The private upload key and its properties live in the ignored `signing/` directory. Preserve both files securely: every future Play update must use the same upload key. They are intentionally never committed.
 
 ## Run on Pixel 7 / 7a and Mazda CX-5
 
-1. Upload the v0.3 AAB to the same Play Console internal-test track and publish the release.
+1. Upload the v0.3.1 AAB to the same Play Console internal-test track and publish the release.
 2. Open the track's tester opt-in link with the enrolled Google account on the Pixel, then install or update Motoring Dashboard from Google Play.
 3. Open **Motoring Dashboard** once on the phone.
 4. Connect the Pixel to the Mazda using the infotainment USB port and a data-capable USB cable, then launch Android Auto.

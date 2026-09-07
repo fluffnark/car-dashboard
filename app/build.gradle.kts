@@ -21,8 +21,8 @@ android {
         applicationId = "com.fluffnark.motoringdashboard"
         minSdk = 28
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.3.1"
+        versionCode = 5
+        versionName = "0.3.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -39,6 +39,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             isMinifyEnabled = true
             signingConfig = signingConfigs.getByName("upload")
@@ -52,6 +56,10 @@ android {
     }
     buildFeatures { compose = true }
 
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     packaging.resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
 }
 
@@ -60,8 +68,8 @@ tasks.register<Copy>("stagePrototypeRelease") {
     from(layout.buildDirectory.file("outputs/apk/release/app-release.apk"))
     from(layout.buildDirectory.file("outputs/bundle/release/app-release.aab"))
     into(rootProject.layout.projectDirectory.dir("releases"))
-    rename("app-release.apk", "motoring-dashboard-v0.3.1.apk")
-    rename("app-release.aab", "motoring-dashboard-v0.3.1.aab")
+    rename("app-release.apk", "motoring-dashboard-v0.3.2.apk")
+    rename("app-release.aab", "motoring-dashboard-v0.3.2.aab")
 }
 
 kotlin {
@@ -87,4 +95,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
     testImplementation("androidx.car.app:app-testing:1.8.0-rc01")
+    testImplementation("org.robolectric:robolectric:4.16.1")
 }

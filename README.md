@@ -1,6 +1,6 @@
 # Motoring Dashboard
 
-A restrained driving-information prototype for Android Auto, with a companion dashboard for the phone. The visual language takes its cues from mid-century instrument panels: warm charcoal, parchment numerals, persimmon accents, simple arcs, and no ornamental chrome.
+A restrained driving-information prototype for Android Auto, with a companion dashboard for the phone. The Polestar-inspired visual direction uses neutral charcoal, off-white sans-serif numerals, thin rules, and a single amber telemetry accent. No branding or assets from Polestar are used.
 
 ## What it shows
 
@@ -9,6 +9,8 @@ A restrained driving-information prototype for Android Auto, with a companion da
 - Fuel percentage and estimated remaining range
 - Odometer
 - Vehicle year, manufacturer, and model
+- Two-minute speed history and a fuel-level graphic, based on actual readings
+- Start ChatGPT button (opens the installed phone app; car action is parked-only)
 
 Every vehicle value is optional. Android Auto and the head unit decide which properties an app receives; unavailable data is shown as an em dash rather than guessed. The clock always works.
 
@@ -32,20 +34,22 @@ Requirements: JDK 17 and Android SDK 36.
 
 The APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
 
-The current car-screen concept is [`releases/motoring-dashboard-v0.3.2.apk`](releases/motoring-dashboard-v0.3.2.apk). Upload [`releases/motoring-dashboard-v0.3.2.aab`](releases/motoring-dashboard-v0.3.2.aab) to the existing Play Console internal-test track. Both are signed with the project's release upload key, not Android's debug certificate.
+The current car-screen concept is [`releases/motoring-dashboard-v0.4.0.apk`](releases/motoring-dashboard-v0.4.0.apk). Upload [`releases/motoring-dashboard-v0.4.0.aab`](releases/motoring-dashboard-v0.4.0.aab), version code **6**, to the existing Play Console internal-test track. Both are signed with the project's release upload key, not Android's debug certificate.
 
-Version 0.3.2 restores the actual dashboard as the Android Auto entry screen. It shows time and available Mazda data in a compact `PaneTemplate`, removes media controls from the dashboard, and hides the vehicle-permission action after access is granted. The media-browser service remains only as the compatibility capability required by the current templated-media distribution path. Exact typography and spacing remain controlled by the Android Auto host for driver safety.
+Version 0.4.0 uses three large instrument images in a `SectionedItemTemplate`: clock, speed with a history trace, and fuel with remaining range. Tap any instrument for the vehicle details and permissions. The permission action disappears once all requested access is granted. Readings refresh at most once per second; invalid values and gaps longer than five seconds are not joined in the graph. History is limited to two minutes, stored in memory, and cleared on disconnect. Android Auto still controls layout, surrounding typography, and its own media/navigation bar.
+
+**Start ChatGPT** uses the installed app's public Android launcher. It opens ChatGPT on the phone; it does not embed a chat in the car display or automatically start voice mode. Unlock the phone and install/sign in to ChatGPT first. Android Auto restricts this phone handoff to parked use. No telemetry is sent to ChatGPT. The existing media compatibility service remains for the internal-test prototype; this does not establish eligibility as a production standalone dashboard app.
 
 The private upload key and its properties live in the ignored `signing/` directory. Preserve both files securely: every future Play update must use the same upload key. They are intentionally never committed.
 
 ## Run on Pixel 7 / 7a and Mazda CX-5
 
-1. Upload the v0.3.2 AAB to the same Play Console internal-test track and publish the release.
+1. Upload the v0.4.0 AAB (code 6) to the same Play Console internal-test track and publish the release. Include only the newest bundle in the draft to avoid shadowed-version errors.
 2. Open the track's tester opt-in link with the enrolled Google account on the Pixel, then install or update Motoring Dashboard from Google Play.
 3. Open **Motoring Dashboard** once on the phone.
 4. Connect the Pixel to the Mazda using the infotainment USB port and a data-capable USB cable, then launch Android Auto.
 5. In Android Auto settings, open **Customize launcher** and ensure Motoring Dashboard is enabled. Reconnect the phone after changing this setting.
-6. Open Motoring Dashboard on the Mazda and choose **Allow vehicle data**. Grant only the vehicle permissions you want to share.
+6. Open Motoring Dashboard on the Mazda, tap an instrument, and choose **Allow vehicle data**. Grant only the vehicle permissions you want to share.
 
 The standalone APK remains useful for phone installation and inspection, but Android Auto only accepts the templated service from a trusted distribution source. Use the Play internal-test build for the Mazda. The media-browser fallback can still appear as a conventional Now Playing screen on hosts that do not support templated media.
 
@@ -66,7 +70,10 @@ Use the DHU sensor controls to simulate speed, fuel, range, mileage, and model v
 
 - `MainActivity`: responsive Compose companion UI
 - `DashboardCarAppService`: Android Auto entry point
-- `DashboardScreen`: compact `PaneTemplate` UI and Car Hardware listeners
+- `DashboardScreen`: instrument grid, details pane, and Car Hardware listeners
+- `InstrumentArtwork`: native Canvas instrument graphics and speed trace
+- `SpeedHistory`: bounded history of actual sensor observations
+- `ChatGptLauncher`: public launcher handoff to the installed ChatGPT app
 - `ConceptMediaService`: compatibility media session; it has no dashboard controls
 - `DashboardRepository`: in-process state shared by the projected and companion surfaces
 

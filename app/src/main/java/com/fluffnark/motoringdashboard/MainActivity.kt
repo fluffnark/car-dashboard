@@ -20,6 +20,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -49,11 +53,11 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-private val Charcoal = Color(0xFF24231F)
-private val Parchment = Color(0xFFE8D7B8)
-private val Persimmon = Color(0xFFD7653B)
-private val Olive = Color(0xFF7B8060)
-private val Dust = Color(0xFFA49A87)
+private val Charcoal = Color(0xFF1C1E1F)
+private val Parchment = Color(0xFFF1F2EE)
+private val Persimmon = Color(0xFFE1A341)
+private val Olive = Color(0xFFB1B8B5)
+private val Dust = Color(0xFFA3A8AA)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,13 +86,13 @@ private fun MotoringDashboard() {
                 Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                     IdentityBlock(now, state, Modifier.weight(0.9f))
                     SpeedDial(state.speedMph, Modifier.weight(1.15f))
-                    Readings(state, Modifier.weight(0.95f))
+                    Readings(state, Modifier.weight(0.95f).verticalScroll(rememberScrollState()))
                 }
             } else {
                 Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
                     IdentityBlock(now, state, Modifier.fillMaxWidth())
                     Spacer(Modifier.height(28.dp))
-                    SpeedDial(state.speedMph, Modifier.weight(1f))
+                    SpeedDial(state.speedMph ?: state.rawSpeedMph, Modifier.weight(1f))
                     Spacer(Modifier.height(22.dp))
                     Readings(state, Modifier.fillMaxWidth())
                 }
@@ -112,7 +116,7 @@ private fun IdentityBlock(now: Long, state: DashboardState, modifier: Modifier =
         Text(
             instant.format(DateTimeFormatter.ofPattern("h:mm")),
             color = Parchment, fontSize = 58.sp, fontWeight = FontWeight.Light,
-            fontFamily = FontFamily.Serif, letterSpacing = (-2).sp
+            fontFamily = FontFamily.SansSerif, letterSpacing = (-2).sp
         )
         Text(
             instant.format(DateTimeFormatter.ofPattern("EEEE · MMMM d")).uppercase(),
@@ -146,7 +150,7 @@ private fun SpeedDial(speed: Float?, modifier: Modifier = Modifier) {
             }
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(displayed, color = Parchment, fontSize = 78.sp, fontWeight = FontWeight.Light, fontFamily = FontFamily.Serif)
+            Text(displayed, color = Parchment, fontSize = 78.sp, fontWeight = FontWeight.Light, fontFamily = FontFamily.SansSerif)
             Text("MILES PER HOUR", color = Dust, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.8.sp)
         }
     }
@@ -154,6 +158,7 @@ private fun SpeedDial(speed: Float?, modifier: Modifier = Modifier) {
 
 @Composable
 private fun Readings(state: DashboardState, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
     Column(modifier) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Reading("FUEL", DashboardFormat.percent(state.fuelPercent), Modifier.weight(1f))
@@ -161,6 +166,27 @@ private fun Readings(state: DashboardState, modifier: Modifier = Modifier) {
         }
         Spacer(Modifier.height(12.dp))
         Reading("ODOMETER", DashboardFormat.miles(state.odometerMiles), Modifier.fillMaxWidth())
+        Spacer(Modifier.height(14.dp))
+        Text("SPEED · LAST 2 MINUTES", color = Dust, fontSize = 10.sp, letterSpacing = 1.sp)
+        Canvas(Modifier.fillMaxWidth().height(54.dp).semantics {
+            contentDescription = if (state.speedHistory.size < 2) "Waiting for speed history" else "Speed over the last two minutes"
+        }) {
+            drawLine(Dust.copy(alpha = 0.3f), Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx())
+            val end = state.speedHistory.lastOrNull()?.elapsedMillis ?: return@Canvas
+            val ceiling = maxOf(60f, state.speedHistory.mapNotNull { it.mph }.maxOrNull() ?: 60f)
+            state.speedHistory.zipWithNext().forEach { (a, b) ->
+                val first = a.mph
+                val second = b.mph
+                if (first != null && second != null && b.elapsedMillis - a.elapsedMillis <= 5_000) {
+                    fun x(time: Long) = ((time - end + 120_000) / 120_000f).coerceIn(0f, 1f) * size.width
+                    drawLine(Persimmon, Offset(x(a.elapsedMillis), size.height * (1 - first / ceiling)),
+                        Offset(x(b.elapsedMillis), size.height * (1 - second / ceiling)), 2.dp.toPx())
+                }
+            }
+        }
+        OutlinedButton(onClick = { ChatGptLauncher.open(context) }, modifier = Modifier.fillMaxWidth()) {
+            Text("Start ChatGPT", color = Parchment)
+        }
         if (!state.connected) {
             Spacer(Modifier.height(16.dp))
             Text(
@@ -173,10 +199,10 @@ private fun Readings(state: DashboardState, modifier: Modifier = Modifier) {
 
 @Composable
 private fun Reading(label: String, value: String, modifier: Modifier = Modifier) {
-    Column(modifier.background(Color(0xFF2F2E29)).padding(16.dp)) {
+    Column(modifier.background(Color(0xFF252829)).padding(12.dp)) {
         Text(label, color = Olive, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
         Spacer(Modifier.height(5.dp))
         Text(value, modifier = Modifier.fillMaxWidth(), color = Parchment, fontSize = 25.sp,
-            fontFamily = FontFamily.Serif, textAlign = TextAlign.Start)
+            fontFamily = FontFamily.SansSerif, textAlign = TextAlign.Start)
     }
 }

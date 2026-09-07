@@ -27,4 +27,10 @@ class DashboardFormatTest {
         assertEquals("100%", DashboardFormat.percent(140f))
         assertEquals("0 mi", DashboardFormat.miles(-5f))
     }
+
+    @Test fun nonFiniteReadingsAreUnavailable() {
+        assertEquals("—", DashboardFormat.speed(Float.NaN))
+        assertEquals("—", DashboardFormat.percent(Float.POSITIVE_INFINITY))
+        assertEquals("—", DashboardFormat.miles(Float.NEGATIVE_INFINITY))
+    }
 }

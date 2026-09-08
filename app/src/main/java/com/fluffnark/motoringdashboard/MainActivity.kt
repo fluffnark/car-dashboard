@@ -6,203 +6,129 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.fluffnark.motoringdashboard.data.DashboardFormat
-import com.fluffnark.motoringdashboard.data.DashboardRepository
-import com.fluffnark.motoringdashboard.data.DashboardState
-import kotlinx.coroutines.delay
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.fluffnark.motoringdashboard.map.MapPreferences
+import com.fluffnark.motoringdashboard.map.MapStyle
 
-private val Charcoal = Color(0xFF1C1E1F)
-private val Parchment = Color(0xFFF1F2EE)
-private val Persimmon = Color(0xFFE1A341)
-private val Olive = Color(0xFFB1B8B5)
-private val Dust = Color(0xFFA3A8AA)
+private val Graphite = Color(0xFF20211E)
+private val Chalk = Color(0xFFE7E2D6)
+private val Clay = Color(0xFFB77949)
+private val Sage = Color(0xFFAEB7A4)
+private val Muted = Color(0xFF9A9D95)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            MaterialTheme { MotoringDashboard() }
-        }
+        setContent { MaterialTheme { SetupScreen() } }
     }
 }
 
 @Composable
-private fun MotoringDashboard() {
-    val state by DashboardRepository.state.collectAsState()
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            now = System.currentTimeMillis()
-            delay(1_000)
-        }
-    }
-    BoxWithConstraints(Modifier.fillMaxSize().background(Charcoal).padding(horizontal = 24.dp, vertical = 34.dp)) {
-        val isLandscape = maxWidth > maxHeight
-        Box(Modifier.fillMaxSize()) {
-            if (isLandscape) {
-                Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-                    IdentityBlock(now, state, Modifier.weight(0.9f))
-                    SpeedDial(state.speedMph, Modifier.weight(1.15f))
-                    Readings(state, Modifier.weight(0.95f).verticalScroll(rememberScrollState()))
-                }
-            } else {
-                Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    IdentityBlock(now, state, Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(28.dp))
-                    SpeedDial(state.speedMph ?: state.rawSpeedMph, Modifier.weight(1f))
-                    Spacer(Modifier.height(22.dp))
-                    Readings(state, Modifier.fillMaxWidth())
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun IdentityBlock(now: Long, state: DashboardState, modifier: Modifier = Modifier) {
-    val instant = Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault())
-    Column(modifier, horizontalAlignment = Alignment.Start) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(9.dp).background(if (state.connected) Olive else Persimmon, CircleShape))
-            Text(
-                if (state.connected) "  ANDROID AUTO · LIVE" else "  READY FOR ANDROID AUTO",
-                color = Dust, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.6.sp
-            )
-        }
-        Spacer(Modifier.height(12.dp))
-        Text(
-            instant.format(DateTimeFormatter.ofPattern("h:mm")),
-            color = Parchment, fontSize = 58.sp, fontWeight = FontWeight.Light,
-            fontFamily = FontFamily.SansSerif, letterSpacing = (-2).sp
-        )
-        Text(
-            instant.format(DateTimeFormatter.ofPattern("EEEE · MMMM d")).uppercase(),
-            color = Persimmon, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.3.sp
-        )
-        state.vehicleName?.let {
-            Spacer(Modifier.height(10.dp))
-            Text(it.uppercase(), color = Dust, fontSize = 11.sp, letterSpacing = 1.sp)
-        }
-    }
-}
-
-@Composable
-private fun SpeedDial(speed: Float?, modifier: Modifier = Modifier) {
-    val displayed = DashboardFormat.speed(speed)
-    Box(modifier.semantics { contentDescription = "$displayed miles per hour" }, contentAlignment = Alignment.Center) {
-        Canvas(Modifier.size(250.dp)) {
-            val stroke = 12.dp.toPx()
-            drawArc(
-                color = Color(0xFF3B3932), startAngle = 140f, sweepAngle = 260f,
-                useCenter = false, style = Stroke(stroke, cap = StrokeCap.Round),
-                topLeft = Offset(stroke, stroke), size = Size(size.width - stroke * 2, size.height - stroke * 2)
-            )
-            if (speed != null) {
-                drawArc(
-                    color = Persimmon, startAngle = 140f,
-                    sweepAngle = (speed.coerceIn(0f, 120f) / 120f) * 260f,
-                    useCenter = false, style = Stroke(stroke, cap = StrokeCap.Round),
-                    topLeft = Offset(stroke, stroke), size = Size(size.width - stroke * 2, size.height - stroke * 2)
-                )
-            }
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(displayed, color = Parchment, fontSize = 78.sp, fontWeight = FontWeight.Light, fontFamily = FontFamily.SansSerif)
-            Text("MILES PER HOUR", color = Dust, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.8.sp)
-        }
-    }
-}
-
-@Composable
-private fun Readings(state: DashboardState, modifier: Modifier = Modifier) {
+private fun SetupScreen() {
     val context = LocalContext.current
-    Column(modifier) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Reading("FUEL", DashboardFormat.percent(state.fuelPercent), Modifier.weight(1f))
-            Reading("RANGE", DashboardFormat.miles(state.rangeMiles), Modifier.weight(1f))
+    var selected by remember { mutableStateOf(MapPreferences.getLook(context)) }
+    Column(
+        Modifier.fillMaxSize().background(Graphite).verticalScroll(rememberScrollState())
+            .padding(horizontal = 26.dp, vertical = 42.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(8.dp).background(Sage, CircleShape))
+            Text("  ANDROID AUTO · READY", color = Muted, fontSize = 11.sp,
+                fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
         }
+        Spacer(Modifier.height(24.dp))
+        Text("Motoring", color = Chalk, fontSize = 48.sp, fontWeight = FontWeight.Light,
+            letterSpacing = (-1.5).sp)
+        Text("ROAD ATLAS", color = Clay, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+            letterSpacing = 2.sp)
+        Spacer(Modifier.height(30.dp))
+        TerrainPreview()
+        Spacer(Modifier.height(28.dp))
+        Text("A calm map, useful places, and honest drive telemetry for the Mazda display.",
+            color = Chalk, fontSize = 18.sp, lineHeight = 26.sp)
+        Spacer(Modifier.height(30.dp))
+        Text("CARTOGRAPHY", color = Muted, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+            letterSpacing = 1.5.sp)
         Spacer(Modifier.height(12.dp))
-        Reading("ODOMETER", DashboardFormat.miles(state.odometerMiles), Modifier.fillMaxWidth())
-        Spacer(Modifier.height(14.dp))
-        Text("SPEED · LAST 2 MINUTES", color = Dust, fontSize = 10.sp, letterSpacing = 1.sp)
-        Canvas(Modifier.fillMaxWidth().height(54.dp).semantics {
-            contentDescription = if (state.speedHistory.size < 2) "Waiting for speed history" else "Speed over the last two minutes"
-        }) {
-            drawLine(Dust.copy(alpha = 0.3f), Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx())
-            val end = state.speedHistory.lastOrNull()?.elapsedMillis ?: return@Canvas
-            val ceiling = maxOf(60f, state.speedHistory.mapNotNull { it.mph }.maxOrNull() ?: 60f)
-            state.speedHistory.zipWithNext().forEach { (a, b) ->
-                val first = a.mph
-                val second = b.mph
-                if (first != null && second != null && b.elapsedMillis - a.elapsedMillis <= 5_000) {
-                    fun x(time: Long) = ((time - end + 120_000) / 120_000f).coerceIn(0f, 1f) * size.width
-                    drawLine(Persimmon, Offset(x(a.elapsedMillis), size.height * (1 - first / ceiling)),
-                        Offset(x(b.elapsedMillis), size.height * (1 - second / ceiling)), 2.dp.toPx())
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            MapStyle.Look.entries.forEach { look ->
+                PaletteChoice(look, selected == look, Modifier.weight(1f)) {
+                    selected = look
+                    MapPreferences.setLook(context, look)
                 }
             }
         }
+        Spacer(Modifier.height(32.dp))
+        SetupLine("01", "Install this build from the Play internal-test track")
+        SetupLine("02", "Enable Motoring Dashboard in Customize launcher")
+        SetupLine("03", "Connect USB and allow location and vehicle data")
+        Spacer(Modifier.height(24.dp))
         OutlinedButton(onClick = { ChatGptLauncher.open(context) }, modifier = Modifier.fillMaxWidth()) {
-            Text("Start ChatGPT", color = Parchment)
+            Text("Start ChatGPT voice", color = Chalk)
         }
-        if (!state.connected) {
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "Connect to the Mazda display to request vehicle readings. Availability is decided by the car and Android Auto.",
-                color = Dust, fontSize = 12.sp, lineHeight = 17.sp
-            )
-        }
+        Spacer(Modifier.height(12.dp))
+        Text("The car action is parked-only. Enable Background conversations in ChatGPT Voice settings if you want the conversation to continue after returning to the map.",
+            color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
     }
 }
 
 @Composable
-private fun Reading(label: String, value: String, modifier: Modifier = Modifier) {
-    Column(modifier.background(Color(0xFF252829)).padding(12.dp)) {
-        Text(label, color = Olive, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
-        Spacer(Modifier.height(5.dp))
-        Text(value, modifier = Modifier.fillMaxWidth(), color = Parchment, fontSize = 25.sp,
-            fontFamily = FontFamily.SansSerif, textAlign = TextAlign.Start)
+private fun TerrainPreview() {
+    Canvas(Modifier.fillMaxWidth().height(150.dp).background(Color(0xFF292B27))) {
+        repeat(5) { index ->
+            val path = Path().apply {
+                moveTo(0f, size.height * (0.25f + index * 0.12f))
+                cubicTo(size.width * .25f, size.height * (.05f + index * .15f),
+                    size.width * .55f, size.height * (.65f + index * .04f),
+                    size.width, size.height * (.22f + index * .13f))
+            }
+            drawPath(path, if (index == 2) Clay else Sage.copy(alpha = .35f),
+                style = Stroke(if (index == 2) 3.dp.toPx() else 1.dp.toPx()))
+        }
+        drawCircle(Chalk, 7.dp.toPx(), Offset(size.width * .57f, size.height * .54f))
+        drawCircle(Graphite, 3.dp.toPx(), Offset(size.width * .57f, size.height * .54f))
+    }
+}
+
+@Composable
+private fun PaletteChoice(look: MapStyle.Look, selected: Boolean, modifier: Modifier, choose: () -> Unit) {
+    val accent = when (look) {
+        MapStyle.Look.WARM -> Clay
+        MapStyle.Look.SCANDINAVIAN -> Color(0xFF78999B)
+        MapStyle.Look.TECHNICAL -> Color(0xFFB08A59)
+    }
+    Column(modifier.clickable(onClick = choose).padding(vertical = 8.dp)) {
+        Box(Modifier.fillMaxWidth().height(5.dp).background(if (selected) accent else Color(0xFF4A4D48)))
+        Spacer(Modifier.height(8.dp))
+        Text(look.name.lowercase().replaceFirstChar(Char::uppercase),
+            color = if (selected) Chalk else Muted, fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun SetupLine(number: String, text: String) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 9.dp)) {
+        Text(number, color = Clay, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+            modifier = Modifier.width(38.dp))
+        Text(text, color = Chalk, fontSize = 14.sp, lineHeight = 20.sp)
     }
 }

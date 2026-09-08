@@ -53,7 +53,7 @@ class DashboardScreenTest {
         carContext = TestCarContext.createCarContext(application)
         sessionController = SessionController(DashboardSession(), carContext, Intent())
         sessionController.moveToState(Lifecycle.State.CREATED)
-        screen = carContext.getCarService(TestScreenManager::class.java).top as DashboardScreen
+        screen = DashboardScreen(carContext)
         DashboardRepository.update { DashboardState() }
     }
 

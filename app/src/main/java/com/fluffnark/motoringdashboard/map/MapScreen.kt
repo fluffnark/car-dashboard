@@ -21,7 +21,6 @@ import com.fluffnark.motoringdashboard.data.LocationDriveSource
 import com.fluffnark.motoringdashboard.data.TelemetryFormat
 import com.fluffnark.motoringdashboard.data.VehicleData
 import com.fluffnark.motoringdashboard.data.VehicleDataSource
-import com.fluffnark.motoringdashboard.data.DashboardFormat
 import com.fluffnark.motoringdashboard.debug.SimulationRoute
 import com.fluffnark.motoringdashboard.poi.PoiRepository
 import androidx.core.graphics.drawable.IconCompat
@@ -61,16 +60,23 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
         carContext.getCarService(AppManager::class.java).setSurfaceCallback(surface)
         surface.onReady = { surface.update(telemetry) }
         vehicleSource.start()
-        if (useDemo) handler.post(simulation) else if (hasLocation()) location.start()
+        if (useDemo) {
+            handler.removeCallbacks(simulation)
+            handler.post(simulation)
+        } else if (hasLocation()) location.start()
     }
-    override fun onStop(owner: LifecycleOwner) { handler.removeCallbacks(simulation); location.stop(); vehicleSource.stop() }
+    // A phone-side voice activity can pause the car Screen while its projected surface remains visible.
+    // Keep low-rate telemetry alive for that handoff; the Session teardown performs the hard stop.
+    override fun onStop(owner: LifecycleOwner) = Unit
     override fun onDestroy(owner: LifecycleOwner) { handler.removeCallbacks(simulation); location.stop(); vehicleSource.stop(); surface.close() }
 
     override fun onGetTemplate(): Template {
         return MapWithContentTemplate.Builder().setContentTemplate(if (showPlaces) places() else instruments())
             .setActionStrip(ActionStrip.Builder()
                 .addAction(iconAction(R.drawable.ic_places, "Places") { showPlaces = !showPlaces; invalidate() })
-                .addAction(Action.Builder().setTitle("Voice").setOnClickListener(ParkedOnlyOnClickListener.create { ChatGptLauncher.open(carContext) }).build())
+                .addAction(Action.Builder().setTitle("Voice").setOnClickListener(ParkedOnlyOnClickListener.create {
+                    ChatGptLauncher.open(carContext, returnToCar = true)
+                }).build())
                 .addAction(iconAction(R.drawable.ic_layers, "Map style") {
                     surface.look = MapStyle.Look.entries[(surface.look.ordinal + 1) % 3]
                     MapPreferences.setLook(carContext, surface.look)
@@ -87,20 +93,16 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
     }
 
     private fun instruments(): PaneTemplate = PaneTemplate.Builder(Pane.Builder()
-        .addRow(Row.Builder().setTitle("${(vehicle.speedMph ?: telemetry.speedMph).toInt()} mph · ${TelemetryFormat.heading(telemetry.headingDegrees)}")
-            .addText(telemetry.road).build())
-        .addRow(Row.Builder().setTitle("${TelemetryFormat.feet(telemetry.elevationFeet)} · ${TelemetryFormat.grade(telemetry.gradePercent)} grade")
-            .addText("Trip ${"%.1f".format(telemetry.tripMiles)} mi${if (telemetry.demo) " · DEMO" else ""}").build())
-        .addRow(Row.Builder().setTitle("Elevation profile")
-            .addText(vehicle.fuelPercent?.let { "Fuel ${DashboardFormat.percent(it)} · range ${DashboardFormat.miles(vehicle.rangeMiles)}" }
-                ?: "Recent climb · ${history.size} samples")
-            .setImage(TelemetryArtwork.elevation(history.toList(), carContext.isDarkMode)).build())
+        .addRow(Row.Builder()
+            .setTitle("${(vehicle.speedMph ?: telemetry.speedMph).toInt()} mph  ·  ${java.time.LocalTime.now().format(CLOCK)}")
+            .addText("${TelemetryFormat.compass(telemetry.headingDegrees)}  ·  ${telemetry.road}")
+            .build())
         .apply {
             if (!useDemo && !hasLocation()) addAction(Action.Builder().setTitle("Allow location")
                 .setOnClickListener { carContext.requestPermissions(listOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION)) { _, _ -> if (hasLocation()) location.start(); invalidate() } }.build())
             if (!vehicleSource.hasAllPermissions()) addAction(Action.Builder().setTitle("Allow car data")
                 .setOnClickListener { vehicleSource.requestPermissions(::invalidate) }.build())
-        }.build()).setHeader(Header.Builder().setTitle("Motoring").build()).build()
+        }.build()).build()
 
     private fun places(): ListTemplate {
         val list = ItemList.Builder()
@@ -129,6 +131,9 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
         carContext.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
     private fun acceptTelemetry(value: DriveTelemetry) {
+        if (value.demo && history.lastOrNull()?.let { value.tripMiles < it.tripMiles } == true) {
+            history.clear()
+        }
         telemetry = value
         hasPosition = true
         history.addLast(value)
@@ -136,4 +141,9 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
         surface.update(value)
         invalidate()
     }
+
+    companion object {
+        private val CLOCK = java.time.format.DateTimeFormatter.ofPattern("h:mm")
+    }
+
 }

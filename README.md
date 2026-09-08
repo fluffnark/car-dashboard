@@ -2,11 +2,12 @@
 
 Motoring Dashboard is an Android Auto map and point-of-interest prototype for calm, glanceable driving information. Its custom MapLibre cartography mixes warm mid-century color with the restraint of a modern instrument cluster. It targets a Pixel 7/7a projected to a 2021 Mazda CX-5 Grand Touring, while adapting to other Android Auto displays.
 
-## Current 0.5.0 concept
+## Current 0.5.1 concept
 
 - Custom vector map rendered directly into Android Auto's official map `Surface`
 - Warm, Scandinavian, and technical cartography; dedicated day and night palettes
-- GPS speed, heading, elevation, grade, trip distance, and a compact elevation profile
+- GPS speed, heading, elevation, grade, trip distance, and a prominent surface-rendered elevation profile
+- Instrument Sans telemetry artwork layered over the map rather than constrained to stock host cards
 - Optional Android Auto car-hardware speed, fuel, range, mileage, and model readings
 - Curated San Juan Mountains POIs with distance sorting and navigation handoff
 - Pan, zoom, recenter, rotary-compatible host controls, and automatic day/night response
@@ -27,14 +28,14 @@ Requirements: JDK 17 and Android SDK 36.
 Outputs:
 
 - Debug APK: `app/build/outputs/apk/debug/app-debug.apk`
-- Signed release APK: `releases/motoring-dashboard-v0.5.0.apk`
-- Signed Play bundle: `releases/motoring-dashboard-v0.5.0.aab` (version code 7)
+- Signed release APK: `releases/motoring-dashboard-v0.5.1.apk`
+- Signed Play bundle: `releases/motoring-dashboard-v0.5.1.aab` (version code 8)
 
 The ignored `signing/` directory contains the existing Play upload key. Keep it backed up; future Play updates must use that same upload key.
 
 ## Run on Pixel 7 / 7a and Mazda
 
-1. Upload the 0.5.0 AAB to the existing Play internal-test track. Do not include an older, shadowed bundle in the same release.
+1. Upload the 0.5.1 AAB to the existing Play internal-test track. Do not include an older, shadowed bundle in the same release.
 2. Install the update from the track's tester link using the enrolled Google account.
 3. Open the phone app once and choose a map palette.
 4. In Android Auto, enable **Motoring Dashboard** under **Customize launcher** and reconnect USB.
@@ -65,7 +66,12 @@ Suggested DHU checks:
 
 ## ChatGPT voice
 
-The launcher first checks at runtime for the official ChatGPT app's exported `com.openai.voice.assistant.AssistantActivity`. If it is callable, the parked-only car action starts it; otherwise the app falls back to ChatGPT's public launcher. This component is not a documented OpenAI API and may change. Install and sign in to ChatGPT first. Enable **Settings → Voice → Background conversations** in ChatGPT if the conversation should continue after returning to the map.
+The launcher first checks at runtime for the official ChatGPT app's exported `com.openai.voice.assistant.AssistantActivity`. If callable, the parked-only car action launches it on the phone's default display and returns to Android Auto after initialization; otherwise the app falls back to ChatGPT's public launcher. This component is not a documented OpenAI API and may change. Install and sign in to ChatGPT first. Enable **Settings → Voice → Background conversations** in ChatGPT so the conversation continues after returning to the map.
+
+## Screenshots
+
+- [Android Auto day mode](docs/screenshots/android-auto-day.png)
+- [Android Auto night mode](docs/screenshots/android-auto-night.png)
 
 Android may reject background activity launches in some host/OS states. This feature is deliberately secondary and parked-only; it may need to be omitted from a Play-reviewed POI release if car-quality review considers it unrelated to the app category.
 

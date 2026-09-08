@@ -4,6 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.ComponentName
 import android.content.pm.PackageManager
+import android.app.ActivityOptions
+import android.os.Handler
+import android.os.Looper
+import android.view.Display
 import android.widget.Toast
 
 /** Optional exported voice entry point, verified at runtime; not a stable OpenAI API. */
@@ -18,14 +22,26 @@ object ChatGptLauncher {
         return Intent().setComponent(component).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 
-    fun open(context: Context) {
+    fun open(context: Context, returnToCar: Boolean = false) {
         val intent = voiceIntent(context) ?: context.packageManager.getLaunchIntentForPackage("com.openai.chatgpt")
         if (intent == null) {
             Toast.makeText(context, "Install ChatGPT on your phone first", Toast.LENGTH_LONG).show()
             return
         }
         try {
-            context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            val options = ActivityOptions.makeBasic().setLaunchDisplayId(Display.DEFAULT_DISPLAY)
+            val application = context.applicationContext
+            application.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), options.toBundle())
+            if (returnToCar) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    runCatching {
+                        val homeOptions = ActivityOptions.makeBasic().setLaunchDisplayId(Display.DEFAULT_DISPLAY)
+                        application.startActivity(home, homeOptions.toBundle())
+                    }
+                }, 1_800L)
+            }
         } catch (_: android.content.ActivityNotFoundException) {
             Toast.makeText(context, "ChatGPT is unavailable on this phone", Toast.LENGTH_LONG).show()
         } catch (_: SecurityException) {

@@ -35,6 +35,7 @@ class CarMapSurface(private val context: CarContext) : SurfaceCallback {
     private var display: VirtualDisplay? = null
     private var presentation: Presentation? = null
     private var view: MapView? = null
+    private var telemetryOverlay: TelemetryOverlayView? = null
     var map: MapLibreMap? = null
         private set
     var night = context.isDarkMode
@@ -55,7 +56,13 @@ class CarMapSurface(private val context: CarContext) : SurfaceCallback {
         presentation = window
         val mapView = MapView(window.context, MapLibreMapOptions.createFromAttributes(window.context).textureMode(true))
         view = mapView
-        window.setContentView(mapView, FrameLayout.LayoutParams(-1, -1))
+        val root = FrameLayout(window.context)
+        root.addView(mapView, FrameLayout.LayoutParams(-1, -1))
+        telemetryOverlay = TelemetryOverlayView(window.context).also { overlay ->
+            overlay.night = night
+            root.addView(overlay, FrameLayout.LayoutParams(-1, -1))
+        }
+        window.setContentView(root, FrameLayout.LayoutParams(-1, -1))
         mapView.onCreate(null)
         window.show()
         mapView.onStart()
@@ -69,6 +76,7 @@ class CarMapSurface(private val context: CarContext) : SurfaceCallback {
     }
 
     fun applyStyle() {
+        telemetryOverlay?.night = night
         map?.setStyle(Style.Builder().fromJson(MapStyle.json(night, look))) { style ->
             if (showDemoRoute) {
                 val route = SimulationRoute.coordinates().map { Point.fromLngLat(it.first, it.second) }
@@ -93,6 +101,7 @@ class CarMapSurface(private val context: CarContext) : SurfaceCallback {
 
     fun update(telemetry: DriveTelemetry) {
         center = LatLng(telemetry.latitude, telemetry.longitude)
+        telemetryOverlay?.update(telemetry)
         map?.style?.getSourceAs<GeoJsonSource>("vehicle")
             ?.setGeoJson(Feature.fromGeometry(Point.fromLngLat(telemetry.longitude, telemetry.latitude)))
         if (following) map?.moveCamera(CameraUpdateFactory.newCameraPosition(
@@ -128,6 +137,7 @@ class CarMapSurface(private val context: CarContext) : SurfaceCallback {
         view?.onStop()
         view?.onDestroy()
         view = null
+        telemetryOverlay = null
         map = null
         presentation?.dismiss()
         presentation = null

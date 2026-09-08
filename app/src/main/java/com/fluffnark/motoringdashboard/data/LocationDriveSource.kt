@@ -10,19 +10,25 @@ class LocationDriveSource(context: Context, private val onTelemetry: (DriveTelem
     private val manager = context.getSystemService(LocationManager::class.java)
     private var previous: Location? = null
     private var tripMeters = 0f
+    private var started = false
 
     @SuppressLint("MissingPermission")
     fun start() {
+        if (started) return
         val provider = when {
             manager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
             manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
             else -> return
         }
         manager.requestLocationUpdates(provider, 1_000L, 2f, this)
+        started = true
         manager.getLastKnownLocation(provider)?.let(::onLocationChanged)
     }
 
-    fun stop() = manager.removeUpdates(this)
+    fun stop() {
+        manager.removeUpdates(this)
+        started = false
+    }
 
     override fun onLocationChanged(location: Location) {
         val old = previous

@@ -2,7 +2,7 @@
 
 `DashboardCarAppService` creates one `DashboardSession`, whose root is `MapScreen`. `MapScreen` owns the host-rendered `MapWithContentTemplate`, compact telemetry content, POI list, and action strips.
 
-`CarMapSurface` receives Android Auto's official surface through `AppManager.setSurfaceCallback`. It creates a `VirtualDisplay` and `Presentation`, then lets MapLibre render its `MapView` into that display. There is no recurring full-screen bitmap capture or private projection protocol. Surface creation, destruction, safe-area updates, gestures, and map lifecycle are handled in one owner.
+`CarMapSurface` receives Android Auto's official surface through `AppManager.setSurfaceCallback`. It creates a `VirtualDisplay` and `Presentation`, then lets MapLibre render its `MapView` into that display. A lightweight `TelemetryOverlayView` draws the large Instrument Sans elevation strip over the lower map surface. There is no recurring full-screen bitmap capture or private projection protocol. Surface creation, destruction, safe-area updates, gestures, and map lifecycle are handled in one owner.
 
 Data remains separated by responsibility:
 

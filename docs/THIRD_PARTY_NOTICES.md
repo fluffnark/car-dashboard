@@ -20,6 +20,10 @@ MapLibre attribution controls remain enabled on the projected map. Offline suppo
 
 AndroidX Car App, Compose, Activity, Lifecycle, and Media libraries are used under the Android Open Source Project Apache License 2.0 terms.
 
-## Fonts and artwork
+## Instrument Sans
 
-The current car surface uses host typography and the map provider's Noto Sans glyph endpoint. Application icons, map styling, telemetry artwork, and phone-side abstract terrain artwork are original project assets.
+The custom instrument faces bundle Instrument Sans from the Google Fonts repository. Copyright 2022 The Instrument Sans Project Authors. It is licensed under the SIL Open Font License 1.1: <https://github.com/google/fonts/tree/main/ofl/instrumentsans>.
+
+## Artwork
+
+Android Auto host controls use host typography and the map uses the provider's Noto Sans glyph endpoint. Application icons, map styling, telemetry artwork, and phone-side abstract terrain artwork are original project assets.

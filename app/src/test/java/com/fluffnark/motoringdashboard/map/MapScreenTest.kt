@@ -2,6 +2,7 @@ package com.fluffnark.motoringdashboard.map
 
 import android.app.Application
 import androidx.car.app.navigation.model.MapWithContentTemplate
+import androidx.car.app.model.PaneTemplate
 import androidx.car.app.testing.TestCarContext
 import org.junit.Assert.*
 import org.junit.Test
@@ -18,6 +19,8 @@ class MapScreenTest {
         val template = MapScreen(context).onGetTemplate() as MapWithContentTemplate
 
         assertNotNull(template.contentTemplate)
+        assertTrue(template.contentTemplate is PaneTemplate)
+        assertEquals(1, (template.contentTemplate as PaneTemplate).pane.rows.size)
         assertEquals(3, template.actionStrip!!.actions.size)
         assertEquals(4, template.mapController!!.mapActionStrip!!.actions.size)
         assertEquals(androidx.car.app.model.Action.PAN, template.mapController!!.mapActionStrip!!.actions.first())

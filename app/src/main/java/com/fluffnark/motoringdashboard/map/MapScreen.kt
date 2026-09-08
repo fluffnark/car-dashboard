@@ -1,9 +1,7 @@
 package com.fluffnark.motoringdashboard.map
 
-import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import androidx.car.app.AppManager
@@ -22,7 +20,7 @@ import com.fluffnark.motoringdashboard.data.TelemetryFormat
 import com.fluffnark.motoringdashboard.data.VehicleData
 import com.fluffnark.motoringdashboard.data.VehicleDataSource
 import com.fluffnark.motoringdashboard.debug.SimulationRoute
-import com.fluffnark.motoringdashboard.poi.PoiRepository
+import com.fluffnark.motoringdashboard.trip.TripListRepository
 import androidx.core.graphics.drawable.IconCompat
 
 class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver {
@@ -41,8 +39,9 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
     )
     private var hasPosition = useDemo
     private var step = 0
-    private var showPlaces = false
+    private var content = Content.DASHBOARD
     private var vehicle = VehicleData()
+    private val tripList = TripListRepository(context)
     private val history = ArrayDeque<DriveTelemetry>()
     private val location = LocationDriveSource(context, ::acceptTelemetry)
     private val vehicleSource = VehicleDataSource(context) { value ->
@@ -71,9 +70,16 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
     override fun onDestroy(owner: LifecycleOwner) { handler.removeCallbacks(simulation); location.stop(); vehicleSource.stop(); surface.close() }
 
     override fun onGetTemplate(): Template {
-        return MapWithContentTemplate.Builder().setContentTemplate(if (showPlaces) places() else instruments())
+        val panel = when (content) {
+            Content.DASHBOARD -> instruments()
+            Content.TRIP_LIST -> tripList()
+        }
+        return MapWithContentTemplate.Builder().setContentTemplate(panel)
             .setActionStrip(ActionStrip.Builder()
-                .addAction(iconAction(R.drawable.ic_places, "Places") { showPlaces = !showPlaces; invalidate() })
+                .addAction(iconAction(R.drawable.ic_checklist, "Trip list") {
+                    content = if (content == Content.TRIP_LIST) Content.DASHBOARD else Content.TRIP_LIST
+                    invalidate()
+                })
                 .addAction(Action.Builder().setTitle("Voice").setOnClickListener(ParkedOnlyOnClickListener.create {
                     ChatGptLauncher.open(carContext, returnToCar = true)
                 }).build())
@@ -95,7 +101,7 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
     private fun instruments(): PaneTemplate = PaneTemplate.Builder(Pane.Builder()
         .addRow(Row.Builder()
             .setTitle("${(vehicle.speedMph ?: telemetry.speedMph).toInt()} mph  ·  ${java.time.LocalTime.now().format(CLOCK)}")
-            .addText("${TelemetryFormat.compass(telemetry.headingDegrees)}  ·  ${telemetry.road}")
+            .addText("${TelemetryFormat.compass(telemetry.headingDegrees)}  ·  ${telemetry.road.substringBefore(" · ").take(24)}")
             .build())
         .apply {
             if (!useDemo && !hasLocation()) addAction(Action.Builder().setTitle("Allow location")
@@ -104,23 +110,19 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
                 .setOnClickListener { vehicleSource.requestPermissions(::invalidate) }.build())
         }.build()).build()
 
-    private fun places(): ListTemplate {
+    private fun tripList(): ListTemplate {
         val list = ItemList.Builder()
-        val nearby = if (hasPosition) PoiRepository.nearby(telemetry.latitude, telemetry.longitude) else emptyList()
-        nearby.forEach { (poi, miles) ->
-            list.addItem(Row.Builder().setTitle(poi.name).addText("${poi.detail} · ${"%.1f".format(miles)} mi")
-                .setBrowsable(false).setOnClickListener {
-                    carContext.startCarApp(Intent(CarContext.ACTION_NAVIGATE,
-                        Uri.parse("geo:${poi.latitude},${poi.longitude}?q=${poi.latitude},${poi.longitude}(${Uri.encode(poi.name)})")))
-                }.build())
-        }
-        if (nearby.isEmpty()) {
-            list.addItem(Row.Builder().setTitle("No guide places nearby")
-                .addText("The first curated guide covers the San Juan Mountains. Map tracking still works everywhere.")
+        val items = tripList.items()
+        items.sortedBy { it.done }.forEach { item ->
+            list.addItem(Row.Builder()
+                .setTitle(item.title)
+                .setImage(CarIcon.Builder(IconCompat.createWithResource(carContext,
+                    if (item.done) R.drawable.ic_checked else R.drawable.ic_unchecked)).build(), Row.IMAGE_TYPE_ICON)
+                .setOnClickListener { tripList.toggle(item.id); invalidate() }
                 .build())
         }
-        return ListTemplate.Builder().setSingleList(list.build())
-            .setHeader(Header.Builder().setTitle("Nearby places").build()).build()
+        if (items.isEmpty()) list.addItem(Row.Builder().setTitle("Add on phone").build())
+        return ListTemplate.Builder().setSingleList(list.build()).build()
     }
 
     private fun iconAction(resource: Int, description: String, click: () -> Unit): Action = Action.Builder()
@@ -145,5 +147,7 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
     companion object {
         private val CLOCK = java.time.format.DateTimeFormatter.ofPattern("h:mm")
     }
+
+    private enum class Content { DASHBOARD, TRIP_LIST }
 
 }

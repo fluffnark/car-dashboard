@@ -13,7 +13,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fluffnark.motoringdashboard.map.MapPreferences
 import com.fluffnark.motoringdashboard.map.MapStyle
+import com.fluffnark.motoringdashboard.trip.TripListRepository
 
 private val Graphite = Color(0xFF20211E)
 private val Chalk = Color(0xFFE7E2D6)
@@ -46,6 +49,9 @@ class MainActivity : ComponentActivity() {
 private fun SetupScreen() {
     val context = LocalContext.current
     var selected by remember { mutableStateOf(MapPreferences.getLook(context)) }
+    val tripList = remember { TripListRepository(context) }
+    var tripItems by remember { mutableStateOf(tripList.items()) }
+    var newItem by remember { mutableStateOf("") }
     Column(
         Modifier.fillMaxSize().background(Graphite).verticalScroll(rememberScrollState())
             .padding(horizontal = 26.dp, vertical = 42.dp),
@@ -75,6 +81,42 @@ private fun SetupScreen() {
                     selected = look
                     MapPreferences.setLook(context, look)
                 }
+            }
+        }
+        Spacer(Modifier.height(30.dp))
+        Text("TRIP LIST", color = Muted, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+            letterSpacing = 1.5.sp)
+        Spacer(Modifier.height(10.dp))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = newItem,
+                onValueChange = { newItem = it.take(80) },
+                placeholder = { Text("Add item", color = Muted) },
+                singleLine = true,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = {
+                tripList.add(newItem)
+                newItem = ""
+                tripItems = tripList.items()
+            }) { Text("+", color = Clay, fontSize = 28.sp) }
+        }
+        tripItems.forEach { item ->
+            Row(
+                Modifier.fillMaxWidth().clickable {
+                    tripList.toggle(item.id)
+                    tripItems = tripList.items()
+                }.padding(vertical = 7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(if (item.done) "✓" else "○", color = if (item.done) Sage else Clay,
+                    fontSize = 20.sp, modifier = Modifier.width(34.dp))
+                Text(item.title, color = if (item.done) Muted else Chalk, fontSize = 15.sp,
+                    modifier = Modifier.weight(1f))
+                TextButton(onClick = {
+                    tripList.remove(item.id)
+                    tripItems = tripList.items()
+                }) { Text("×", color = Muted, fontSize = 20.sp) }
             }
         }
         Spacer(Modifier.height(32.dp))

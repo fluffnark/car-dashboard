@@ -10,4 +10,6 @@ The instrument faces bundle Instrument Sans from the Google Fonts repository. Co
 
 ## Artwork
 
-The application icon, instrument faces, compass, clock, elevation trace, and phone-side artwork are original project assets. Version 0.7.0 contains no MapLibre code, map style, vector tiles, or OpenStreetMap-derived data.
+The application icon, instrument faces, compass, clock, elevation trace, and phone-side artwork are original project assets. Version 0.8.0 contains no MapLibre code, map style, vector tiles, or OpenStreetMap-derived data.
+
+Google Identity authorization is provided by Google Play services. Google Tasks data is accessed only through Google's documented REST API after user authorization.

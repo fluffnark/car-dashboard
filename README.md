@@ -1,6 +1,6 @@
 # Motoring Dashboard
 
-Motoring Dashboard is a low-distraction Android Auto instrument prototype for a Pixel 7/7a projected to a 2021 Mazda CX-5 Grand Touring. Version 0.7.0 removes the live map and presents a calm, mid-century-modern dashboard drawn directly on Android Auto's official car surface.
+Motoring Dashboard is a low-distraction Android Auto instrument prototype for a Pixel 7/7a projected to a 2021 Mazda CX-5 Grand Touring. Version 0.8.0 presents a calm, mid-century-modern dashboard drawn directly on Android Auto's official car surface.
 
 ## Current concept
 
@@ -9,8 +9,9 @@ Motoring Dashboard is a low-distraction Android Auto instrument prototype for a 
 - Instrument Sans typography with separate warm day and graphite night palettes
 - One-frame-per-second maximum rendering; no map engine, tile traffic, virtual display, or animation loop
 - Host-rendered persistent controls and lists for Mazda Commander-knob focus
-- Offline trip checklist edited on the phone and checked on the car display
-- Parked-only **Voice** action for the installed official ChatGPT app
+- Offline-first trip checklist with explicit Google Tasks sync on the phone
+- Night display by default, with persistent Night/Auto/Day controls on the phone
+- Compact parked-only voice action for the installed official ChatGPT app
 - Deterministic US-550 simulated drive in debug builds
 
 The Mazda and Android Auto decide which car-hardware values are exposed. Missing readings stay hidden; the app never invents them. See [Mazda data research](docs/MAZDA_DATA.md).
@@ -27,20 +28,20 @@ Requirements: JDK 17 and Android SDK 36.
 Outputs:
 
 - Debug APK: `app/build/outputs/apk/debug/app-debug.apk`
-- Signed release APK: `releases/motoring-dashboard-v0.7.0.apk`
-- Signed Play bundle: `releases/motoring-dashboard-v0.7.0.aab` (version code 10)
+- Signed release APK: `releases/motoring-dashboard-v0.8.0.apk`
+- Signed Play bundle: `releases/motoring-dashboard-v0.8.0.aab` (version code 11)
 
 The ignored `signing/` directory contains the existing Play upload key. Keep it backed up; future Play updates must use that key.
 
 ## Run on Pixel 7 / 7a and Mazda
 
-1. Upload the 0.7.0 AAB to the existing Play internal-test track, or install the signed APK.
-2. Open the phone app once and add any trip-list items.
+1. Upload the 0.8.0 AAB to the existing Play internal-test track, or install the signed APK.
+2. Open the phone app once, select the car-display palette, and add or sync trip-list items.
 3. In Android Auto, enable **Motoring Dashboard** under **Customize launcher**, then reconnect USB.
 4. Open Motoring Dashboard and grant location and optional vehicle-data permissions.
 5. Turn the Mazda Commander knob to move the visible focus ring; press it to activate the checklist or Voice action.
 
-The custom surface currently requires Android Auto's map-template capability and is packaged as a POI prototype. Because 0.7.0 intentionally has no map or POI browser, it is suitable for internal design testing but is not ready for public POI-category review. Android Auto therefore also treats it as a map-like app in dashboard/split layouts and may pair it with media or retain another navigation pane according to host policy. A true media-category build would pair correctly with navigation, but Android Auto would replace this custom artwork with its standard media template.
+The custom surface currently requires Android Auto's map-template capability and is packaged as a POI prototype. Because 0.8.0 intentionally has no map or POI browser, it is suitable for internal design testing but is not ready for public POI-category review. Android Auto therefore also treats it as a map-like app in dashboard/split layouts and may pair it with media or retain another navigation pane according to host policy. A true media-category build would pair correctly with navigation, but Android Auto would replace this custom artwork with its standard media template.
 
 ## Desktop Head Unit
 
@@ -66,9 +67,11 @@ The launcher runtime-checks the official ChatGPT app's exported `com.openai.voic
 
 There is no documented third-party intent for ending a ChatGPT voice conversation. The car button therefore starts Voice but does not pretend to be a reliable on/off toggle; end the session with ChatGPT's own control on the phone.
 
-## Trip list and assistant sync
+## Trip list and Google Tasks
 
-The checklist is currently local and offline. It now uses a `TripListStore` provider seam so an authenticated Google Tasks adapter can replace local storage without changing the Mazda UI. Google Tasks is the cleanest future shared-list backend because it has a supported read/write API. Google Keep's API is intended for administrator-approved enterprise use, and current ChatGPT Voice integrations do not guarantee write access to the same Keep list. See [Google Tasks hook](docs/GOOGLE_TASKS.md).
+The checklist stays instant and usable offline in the car. The phone's **Google Tasks** control authorizes the narrow Tasks scope, creates or selects a list named **Motoring**, pushes queued car/phone edits, then pulls the current remote list. Authentication and failures remain phone-side. Google Cloud must recognize the installed package and signing certificate before the first authorization; see [Google Tasks setup](docs/GOOGLE_TASKS.md).
+
+Gemini can add to Google Tasks when that integration is available for the selected Google account. There is no verified ChatGPT Voice action that edits Google Tasks, so the ChatGPT launcher remains independent of checklist sync.
 
 ## Screenshots
 
@@ -79,4 +82,4 @@ These images are deterministic surface renders. Android Auto adds its own action
 
 See [Architecture](docs/ARCHITECTURE.md) and [third-party notices](docs/THIRD_PARTY_NOTICES.md).
 
-No analytics, user account, OpenAI API key, unofficial projection protocol, accessibility service, root access, or screen mirroring is used.
+No analytics, OpenAI API key, unofficial projection protocol, accessibility service, root access, or screen mirroring is used. Google authorization is initiated only by the phone-side sync control, and access tokens are kept in memory only for that sync.

@@ -22,7 +22,8 @@ class DashboardRendererTest {
         val renderer = DashboardRenderer(RuntimeEnvironment.getApplication())
         repeat(48) { renderer.record(SimulationRoute.sample(it)) }
         val telemetry = SimulationRoute.sample(48)
-        val vehicle = VehicleData(speedMph = 58f, fuelPercent = 64f, rangeMiles = 226f)
+        val vehicle = VehicleData(speedMph = 58f, fuelPercent = 64f, rangeMiles = 226f,
+            odometerMiles = 48_312f)
         val day = render(renderer, telemetry, vehicle, false)
         val night = render(renderer, telemetry, vehicle, true)
 

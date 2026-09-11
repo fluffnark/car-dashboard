@@ -194,11 +194,13 @@ class DashboardRenderer(context: Context) {
         canvas: Canvas, vehicle: VehicleData, width: Float, height: Float,
         p: Palette, scale: Float,
     ) {
-        val fuel = vehicle.fuelPercent ?: return
-        val label = buildString {
-            append("FUEL ${fuel.roundToInt()}%")
-            vehicle.rangeMiles?.let { append("  ·  ${it.roundToInt()} MI") }
+        val values = buildList {
+            vehicle.fuelPercent?.let { add("FUEL ${it.roundToInt()}%") }
+            vehicle.rangeMiles?.let { add("${it.roundToInt()} MI RANGE") }
+            vehicle.odometerMiles?.let { add("${"%,.0f".format(it)} MI") }
         }
+        if (values.isEmpty()) return
+        val label = values.joinToString("  ·  ")
         text(canvas, label, width * .02f, height * .96f, 13f * scale, p.muted)
     }
 

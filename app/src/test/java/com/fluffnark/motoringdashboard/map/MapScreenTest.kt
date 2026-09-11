@@ -6,7 +6,9 @@ import androidx.car.app.navigation.model.MapWithContentTemplate
 import androidx.car.app.model.ListTemplate
 import androidx.car.app.model.PaneTemplate
 import androidx.car.app.testing.TestCarContext
+import com.fluffnark.motoringdashboard.trip.TripListRepository
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -16,22 +18,30 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class MapScreenTest {
+    private val application get() = RuntimeEnvironment.getApplication() as Application
+
+    @Before fun clearTripList() {
+        application.getSharedPreferences("trip_list", 0).edit().clear().commit()
+    }
+
     @Test fun mapTemplateHasCompactTelemetryAndPersistentHostControls() {
-        val context = TestCarContext.createCarContext(RuntimeEnvironment.getApplication() as Application)
+        val context = TestCarContext.createCarContext(application)
         val template = MapScreen(context).onGetTemplate() as MapWithContentTemplate
 
         assertNotNull(template.contentTemplate)
         assertTrue(template.contentTemplate is PaneTemplate)
         assertEquals(1, (template.contentTemplate as PaneTemplate).pane.rows.size)
-        assertEquals(2, template.actionStrip!!.actions.size)
+        assertEquals(1, template.actionStrip!!.actions.size)
         assertNull(template.mapController)
         template.actionStrip!!.actions.forEach {
             assertEquals(androidx.car.app.model.Action.FLAG_IS_PERSISTENT, it.flags)
+            assertNotNull(it.icon)
         }
     }
 
     @Test fun persistentActionsExposeRotaryClickableDelegates() {
-        val context = TestCarContext.createCarContext(RuntimeEnvironment.getApplication() as Application)
+        val context = TestCarContext.createCarContext(application)
+        TripListRepository(context).add("Pick up coffee")
         val screen = MapScreen(context)
         val actions = (screen.onGetTemplate() as MapWithContentTemplate).actionStrip!!.actions
 

@@ -21,8 +21,8 @@ android {
         applicationId = "com.fluffnark.motoringdashboard"
         minSdk = 28
         targetSdk = 36
-        versionCode = 10
-        versionName = "0.7.0"
+        versionCode = 11
+        versionName = "0.8.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -68,8 +68,8 @@ tasks.register<Copy>("stagePrototypeRelease") {
     from(layout.buildDirectory.file("outputs/apk/release/app-release.apk"))
     from(layout.buildDirectory.file("outputs/bundle/release/app-release.aab"))
     into(rootProject.layout.projectDirectory.dir("releases"))
-    rename("app-release.apk", "motoring-dashboard-v0.7.0.apk")
-    rename("app-release.aab", "motoring-dashboard-v0.7.0.aab")
+    rename("app-release.apk", "motoring-dashboard-v0.8.0.apk")
+    rename("app-release.aab", "motoring-dashboard-v0.8.0.aab")
 }
 
 kotlin {
@@ -87,6 +87,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.3")
     implementation("androidx.car.app:app:1.8.0-rc01")
     implementation("androidx.car.app:app-projected:1.8.0-rc01")
+    implementation("com.google.android.gms:play-services-auth:22.0.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("androidx.car.app:app-testing:1.8.0-rc01")

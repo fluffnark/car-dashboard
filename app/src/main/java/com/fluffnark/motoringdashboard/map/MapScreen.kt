@@ -14,8 +14,8 @@ import androidx.lifecycle.LifecycleOwner
 import com.fluffnark.motoringdashboard.ChatGptLauncher
 import com.fluffnark.motoringdashboard.R
 import com.fluffnark.motoringdashboard.data.DriveTelemetry
+import com.fluffnark.motoringdashboard.data.DisplayPreferences
 import com.fluffnark.motoringdashboard.data.LocationDriveSource
-import com.fluffnark.motoringdashboard.data.TelemetryFormat
 import com.fluffnark.motoringdashboard.data.VehicleData
 import com.fluffnark.motoringdashboard.data.VehicleDataSource
 import com.fluffnark.motoringdashboard.debug.SimulationRoute
@@ -24,7 +24,17 @@ import com.fluffnark.motoringdashboard.trip.TripListStore
 import androidx.core.graphics.drawable.IconCompat
 
 class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver {
-    val surface = DashboardSurface(context)
+    val surface = DashboardSurface(context).apply {
+        night = DisplayPreferences.isNight(context, context.isDarkMode)
+    }
+    private val displayPreferences = DisplayPreferences.preferences(context)
+    private val displayPreferenceListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+        surface.night = DisplayPreferences.isNight(carContext, carContext.isDarkMode)
+    }
+    private val tripPreferences = context.getSharedPreferences("trip_list", android.content.Context.MODE_PRIVATE)
+    private val tripPreferenceListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+        invalidate()
+    }
     private val handler = Handler(Looper.getMainLooper())
     private val useDemo = carContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     private var telemetry = if (useDemo) SimulationRoute.sample(0) else DriveTelemetry(
@@ -55,6 +65,9 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
     }
     init { lifecycle.addObserver(this) }
     override fun onStart(owner: LifecycleOwner) {
+        displayPreferences.registerOnSharedPreferenceChangeListener(displayPreferenceListener)
+        tripPreferences.registerOnSharedPreferenceChangeListener(tripPreferenceListener)
+        surface.night = DisplayPreferences.isNight(carContext, carContext.isDarkMode)
         carContext.getCarService(AppManager::class.java).setSurfaceCallback(surface)
         surface.update(telemetry)
         surface.updateVehicle(vehicle)
@@ -65,6 +78,8 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
         } else if (hasLocation()) location.start()
     }
     override fun onStop(owner: LifecycleOwner) {
+        displayPreferences.unregisterOnSharedPreferenceChangeListener(displayPreferenceListener)
+        tripPreferences.unregisterOnSharedPreferenceChangeListener(tripPreferenceListener)
         handler.removeCallbacks(simulation)
         location.stop()
         vehicleSource.stop()
@@ -72,26 +87,35 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
     override fun onDestroy(owner: LifecycleOwner) { handler.removeCallbacks(simulation); location.stop(); vehicleSource.stop(); surface.close() }
 
     override fun onGetTemplate(): Template {
-        val panel = when (content) {
-            Content.DASHBOARD -> instruments()
-            Content.TRIP_LIST -> tripList()
+        val hasTripItems = tripList.items().isNotEmpty()
+        val panel = when {
+            content == Content.TRIP_LIST && hasTripItems -> tripList()
+            else -> instruments()
         }
+        val actions = ActionStrip.Builder()
+        if (hasTripItems) {
+            actions.addAction(iconAction(R.drawable.ic_checklist) {
+                content = if (content == Content.TRIP_LIST) Content.DASHBOARD else Content.TRIP_LIST
+                invalidate()
+            })
+        }
+        actions.addAction(Action.Builder()
+            .setIcon(CarIcon.Builder(IconCompat.createWithResource(carContext, R.drawable.ic_voice)).build())
+            .setOnClickListener(ParkedOnlyOnClickListener.create {
+                ChatGptLauncher.open(carContext, returnToCar = true)
+            })
+            .setFlags(Action.FLAG_IS_PERSISTENT)
+            .build())
         return MapWithContentTemplate.Builder().setContentTemplate(panel)
-            .setActionStrip(ActionStrip.Builder()
-                .addAction(iconAction(R.drawable.ic_checklist) {
-                    content = if (content == Content.TRIP_LIST) Content.DASHBOARD else Content.TRIP_LIST
-                    invalidate()
-                })
-                .addAction(Action.Builder().setTitle("Voice").setOnClickListener(ParkedOnlyOnClickListener.create {
-                    ChatGptLauncher.open(carContext, returnToCar = true)
-                }).setFlags(Action.FLAG_IS_PERSISTENT).build())
-                .build())
+            .setActionStrip(actions.build())
             .build()
     }
 
     private fun instruments(): PaneTemplate = PaneTemplate.Builder(Pane.Builder()
         .addRow(Row.Builder()
-            .setTitle("${TelemetryFormat.compass(telemetry.headingDegrees)}  ·  ${telemetry.road.substringBefore(" · ").take(24)}")
+            // Android Auto requires non-empty pane content; a single quiet mark keeps the host
+            // panel at its minimum size without duplicating the compass or road information.
+            .setTitle("·")
             .build())
         .apply {
             if (!useDemo && !hasLocation()) addAction(Action.Builder().setTitle("Allow location")
@@ -111,7 +135,6 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
                 .setOnClickListener { tripList.toggle(item.id); invalidate() }
                 .build())
         }
-        if (items.isEmpty()) list.addItem(Row.Builder().setTitle("Add on phone").build())
         return ListTemplate.Builder().setSingleList(list.build()).build()
     }
 

@@ -1,6 +1,6 @@
 # Architecture
 
-`DashboardCarAppService` creates a `DashboardSession` whose root `MapScreen` supplies Android Auto's host-rendered `MapWithContentTemplate`, persistent action strip, and checklist. The class name remains for compatibility with the prototype history; there is no map renderer in 0.7.0.
+`DashboardCarAppService` creates a `DashboardSession` whose root `MapScreen` supplies Android Auto's host-rendered `MapWithContentTemplate`, persistent action strip, and checklist. The class name remains for compatibility with the prototype history; there is no map renderer in 0.8.0.
 
 `DashboardSurface` receives the official Android Auto `Surface` through `AppManager.setSurfaceCallback`. A dedicated `HandlerThread` locks its canvas only when data, theme, surface geometry, or the minute changes. Pending telemetry frames are coalesced and limited to one per second. `DashboardRenderer` draws the Instrument Sans speed dial, compass, clock, elevation trace, altitude, grade, trip, and available vehicle values directly to that canvas.
 
@@ -11,7 +11,9 @@ Data remains separated by responsibility:
 - `LocationDriveSource`: live phone location, trip accumulation, heading, elevation, and grade
 - `VehicleDataSource`: optional Android Auto speed, fuel/range, mileage, and model readings
 - `TripListStore`: checklist boundary shared by phone and car interfaces
-- `TripListRepository`: current offline implementation; an authenticated Google Tasks adapter can replace it
+- `TripListRepository`: offline-first list and pending-change journal shared by phone and car
+- `GoogleTasksSync`: explicit phone-side push/pull reconciliation through Google Tasks REST
+- `DisplayPreferences`: persistent Night/Auto/Day selection; Night is the first-run default
 - `SimulationRoute`: debug-only repeatable US-550 drive
 - `DashboardRenderer`: instrument composition plus bounded elevation history
 

@@ -1,8 +1,8 @@
 # Architecture
 
-`DashboardCarAppService` creates a `DashboardSession` whose root `MapScreen` supplies Android Auto's host-rendered `MapWithContentTemplate`, persistent action strip, and checklist. The class name remains for compatibility with the prototype history; there is no map renderer in 0.8.0.
+`DashboardCarAppService` creates a `DashboardSession` whose root `MapScreen` supplies Android Auto's host-rendered `MapWithContentTemplate`, persistent action strip, and checklist. The class name remains for compatibility with the prototype history; there is no map renderer in 0.9.0.
 
-`DashboardSurface` receives the official Android Auto `Surface` through `AppManager.setSurfaceCallback`. A dedicated `HandlerThread` locks its canvas only when data, theme, surface geometry, or the minute changes. Pending telemetry frames are coalesced and limited to one per second. `DashboardRenderer` draws the Instrument Sans speed dial, compass, clock, elevation trace, altitude, grade, trip, and available vehicle values directly to that canvas.
+`DashboardSurface` receives the official Android Auto `Surface` through `AppManager.setSurfaceCallback`. A dedicated `HandlerThread` locks its canvas only when data, theme, surface geometry, or the minute changes. Pending telemetry frames are coalesced and limited to one per second. `DashboardRenderer` draws the Instrument Sans speed dial, compass, clock, elevation trace, altitude, grade, trip, GPS accuracy, and available vehicle values directly to that canvas.
 
 This replaces the former MapLibre `MapView`, `VirtualDisplay`, `Presentation`, network tile pipeline, and continuous camera rendering. The host-owned `Surface` is never released by the app; it is simply forgotten when Android Auto destroys it. Rendering exceptions caused by a concurrent host surface replacement are contained to the dropped frame.
 

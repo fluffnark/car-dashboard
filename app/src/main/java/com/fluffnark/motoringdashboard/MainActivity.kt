@@ -225,7 +225,7 @@ private fun SetupScreen() {
             Text("Start ChatGPT voice", color = Chalk)
         }
         Spacer(Modifier.height(12.dp))
-        Text("The car action is parked-only. Enable Background conversations in ChatGPT Voice settings if you want the conversation to continue after returning to the instruments.",
+        Text("Enable Background conversations in ChatGPT Voice settings so the conversation continues after returning to the instruments. Android Auto or ChatGPT may still reject an external launch while driving.",
             color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
         }
     }

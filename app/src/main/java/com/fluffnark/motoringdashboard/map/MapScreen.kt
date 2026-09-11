@@ -87,23 +87,21 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
     override fun onDestroy(owner: LifecycleOwner) { handler.removeCallbacks(simulation); location.stop(); vehicleSource.stop(); surface.close() }
 
     override fun onGetTemplate(): Template {
-        val hasTripItems = tripList.items().any { !it.done }
         val panel = when {
-            content == Content.TRIP_LIST && hasTripItems -> tripList()
+            content == Content.TRIP_LIST -> tripList()
             else -> instruments()
         }
         val actions = ActionStrip.Builder()
-        if (hasTripItems) {
-            actions.addAction(iconAction(R.drawable.ic_checklist) {
-                content = if (content == Content.TRIP_LIST) Content.DASHBOARD else Content.TRIP_LIST
-                invalidate()
-            })
-        }
+        actions.addAction(iconAction(R.drawable.ic_checklist) {
+            content = if (content == Content.TRIP_LIST) Content.DASHBOARD else Content.TRIP_LIST
+            invalidate()
+        })
         actions.addAction(Action.Builder()
-            .setIcon(CarIcon.Builder(IconCompat.createWithResource(carContext, R.drawable.ic_voice)).build())
-            .setOnClickListener(ParkedOnlyOnClickListener.create {
+            .setIcon(CarIcon.Builder(IconCompat.createWithResource(carContext, R.drawable.ic_voice))
+                .setTint(CarColor.DEFAULT).build())
+            .setOnClickListener {
                 ChatGptLauncher.open(carContext, returnToCar = true)
-            })
+            }
             .setFlags(Action.FLAG_IS_PERSISTENT)
             .build())
         return MapWithContentTemplate.Builder().setContentTemplate(panel)
@@ -113,9 +111,9 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
 
     private fun instruments(): PaneTemplate = PaneTemplate.Builder(Pane.Builder()
         .addRow(Row.Builder()
-            // Android Auto requires non-empty pane content; a single quiet mark keeps the host
-            // panel at its minimum size without duplicating the compass or road information.
-            .setTitle("·")
+            // MapWithContentTemplate requires non-empty host content. Keep its unavoidable
+            // panel compact and meaningful instead of showing an apparently empty bar.
+            .setTitle("GPS")
             .build())
         .apply {
             if (!useDemo && !hasLocation()) addAction(Action.Builder().setTitle("Allow location")
@@ -126,17 +124,24 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
 
     private fun tripList(): ListTemplate {
         val list = ItemList.Builder()
-        tripList.items().filterNot { it.done }.forEach { item ->
+        val active = tripList.items().filterNot { it.done }
+        active.forEach { item ->
             list.addItem(Row.Builder()
                 .setTitle("○  ${item.title.take(42)}")
-                .setOnClickListener { tripList.toggle(item.id); invalidate() }
+                .setOnClickListener {
+                    tripList.toggle(item.id)
+                    if (tripList.items().none { !it.done }) content = Content.DASHBOARD
+                    invalidate()
+                }
                 .build())
         }
+        if (active.isEmpty()) list.addItem(Row.Builder().setTitle("✓  All clear").build())
         return ListTemplate.Builder().setSingleList(list.build()).build()
     }
 
     private fun iconAction(resource: Int, click: () -> Unit): Action = Action.Builder()
-        .setIcon(CarIcon.Builder(IconCompat.createWithResource(carContext, resource)).build())
+        .setIcon(CarIcon.Builder(IconCompat.createWithResource(carContext, resource))
+            .setTint(CarColor.DEFAULT).build())
         .setOnClickListener(click).setFlags(Action.FLAG_IS_PERSISTENT).build()
 
     private fun hasLocation(): Boolean = carContext.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||

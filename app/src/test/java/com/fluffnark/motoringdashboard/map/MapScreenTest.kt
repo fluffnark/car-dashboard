@@ -30,8 +30,10 @@ class MapScreenTest {
 
         assertNotNull(template.contentTemplate)
         assertTrue(template.contentTemplate is PaneTemplate)
-        assertEquals(1, (template.contentTemplate as PaneTemplate).pane.rows.size)
-        assertEquals(1, template.actionStrip!!.actions.size)
+        val pane = (template.contentTemplate as PaneTemplate).pane
+        assertEquals(1, pane.rows.size)
+        assertEquals("GPS", pane.rows.single().title.toString())
+        assertEquals(2, template.actionStrip!!.actions.size)
         assertNull(template.mapController)
         template.actionStrip!!.actions.forEach {
             assertEquals(androidx.car.app.model.Action.FLAG_IS_PERSISTENT, it.flags)
@@ -46,7 +48,7 @@ class MapScreenTest {
         val actions = (screen.onGetTemplate() as MapWithContentTemplate).actionStrip!!.actions
 
         assertFalse(actions[0].onClickDelegate!!.isParkedOnly)
-        assertTrue(actions[1].onClickDelegate!!.isParkedOnly)
+        assertFalse(actions[1].onClickDelegate!!.isParkedOnly)
         actions[0].onClickDelegate!!.sendClick(object : OnDoneCallback {})
 
         val updated = screen.onGetTemplate() as MapWithContentTemplate
@@ -59,6 +61,6 @@ class MapScreenTest {
 
         val completed = screen.onGetTemplate() as MapWithContentTemplate
         assertTrue(completed.contentTemplate is PaneTemplate)
-        assertEquals(1, completed.actionStrip!!.actions.size)
+        assertEquals(2, completed.actionStrip!!.actions.size)
     }
 }

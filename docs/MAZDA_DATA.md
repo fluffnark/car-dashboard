@@ -44,4 +44,4 @@ After installing the APK and granting vehicle permissions, connect by USB and in
 3. Compare odometer with the cluster.
 4. A missing optional gauge means Android Auto returned unavailable, unimplemented, or permission denied—it does not mean the Mazda lacks the underlying sensor.
 
-If fuel or mileage remains unavailable, the supported next option is an external Bluetooth Low Energy OBD-II adapter with a separate, carefully permissioned phone-side data source. OBD integration is not included in v0.7.0.
+If fuel or mileage remains unavailable, the supported next option is an external Bluetooth Low Energy OBD-II adapter with a separate, carefully permissioned phone-side data source. OBD integration is not included in v0.9.0.

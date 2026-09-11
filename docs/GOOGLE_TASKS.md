@@ -1,6 +1,6 @@
 # Google Tasks sync
 
-Version 0.8.3 implements phone-side Google Identity authorization and two-way reconciliation with the official Google Tasks REST API. The car and phone continue to use the local `TripListRepository`, so Mazda Commander-knob actions do not wait for a network request. Each explicit phone sync applies queued additions, completion changes, and deletions, then refreshes the local cache from a Google Tasks list named **Motoring**.
+Version 0.9.0 implements phone-side Google Identity authorization and two-way reconciliation with the official Google Tasks REST API. The car and phone continue to use the local `TripListRepository`, so Mazda Commander-knob actions do not wait for a network request. Each explicit phone sync applies queued additions, completion changes, and deletions, then refreshes the local cache from a Google Tasks list named **Motoring**.
 
 ## Required Google Cloud setup
 

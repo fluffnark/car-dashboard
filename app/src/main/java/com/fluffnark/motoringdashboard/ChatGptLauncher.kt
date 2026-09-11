@@ -45,7 +45,7 @@ object ChatGptLauncher {
         } catch (_: android.content.ActivityNotFoundException) {
             Toast.makeText(context, "ChatGPT is unavailable on this phone", Toast.LENGTH_LONG).show()
         } catch (_: SecurityException) {
-            Toast.makeText(context, "Open ChatGPT from your phone while parked", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "ChatGPT blocked the external voice launch", Toast.LENGTH_LONG).show()
         }
     }
 }

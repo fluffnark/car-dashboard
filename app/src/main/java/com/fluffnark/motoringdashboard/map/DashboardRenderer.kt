@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.Typeface
 import androidx.core.content.res.ResourcesCompat
 import com.fluffnark.motoringdashboard.R
 import com.fluffnark.motoringdashboard.data.DriveTelemetry
@@ -22,6 +23,7 @@ import kotlin.math.sin
 /** Low-frequency, allocation-light instrument artwork drawn directly to the car surface. */
 class DashboardRenderer(context: Context) {
     private val typeface = ResourcesCompat.getFont(context, R.font.instrument_sans)
+    private val boldTypeface = Typeface.create(typeface, Typeface.BOLD)
     private val elevations = ArrayDeque<Float>()
     private var lastTripMiles: Float? = null
 
@@ -57,15 +59,16 @@ class DashboardRenderer(context: Context) {
         drawClock(canvas, now, width * .75f, height * .49f, height * .175f,
             palette, scale)
         drawElevation(canvas, telemetry, width, height, palette, scale)
+        drawGpsAccuracy(canvas, telemetry.accuracyFeet, width, height, palette, scale)
         drawVehicleData(canvas, vehicle, width, height, palette, scale)
     }
 
     private fun drawBackdrop(canvas: Canvas, width: Float, height: Float, p: Palette, scale: Float) {
-        val rule = paint(p.muted, alpha = if (p.dark) 20 else 25, stroke = scale)
+        val rule = paint(p.muted, alpha = if (p.dark) 48 else 54, stroke = 1.5f * scale)
         canvas.drawLine(width * .32f, height * .30f, width * .32f, height * .96f, rule)
         canvas.drawLine(width * .62f, height * .30f, width * .62f, height * .73f, rule)
         canvas.drawArc(RectF(width * .33f, height * .17f, width * .96f, height * 1.31f),
-            198f, 112f, false, paint(p.accent, alpha = if (p.dark) 20 else 17, stroke = 2f * scale))
+            198f, 112f, false, paint(p.accent, alpha = if (p.dark) 34 else 30, stroke = 2.5f * scale))
     }
 
     private fun drawSpeed(
@@ -76,8 +79,8 @@ class DashboardRenderer(context: Context) {
         val sweep = 270f
         val fraction = (speed / 100f).coerceIn(0f, 1f)
         val bounds = RectF(cx - radius, cy - radius, cx + radius, cy + radius)
-        canvas.drawArc(bounds, start, sweep, false, paint(p.muted, alpha = 72, stroke = 6f * scale))
-        canvas.drawArc(bounds, start, sweep * fraction, false, paint(p.sage, stroke = 6f * scale))
+        canvas.drawArc(bounds, start, sweep, false, paint(p.muted, alpha = 110, stroke = 8f * scale))
+        canvas.drawArc(bounds, start, sweep * fraction, false, paint(p.sage, stroke = 8f * scale))
 
         repeat(21) { index ->
             val angle = radians(start + sweep * index / 20f)
@@ -85,30 +88,31 @@ class DashboardRenderer(context: Context) {
             val inner = radius - (if (index % 2 == 0) 12f else 6f) * scale
             canvas.drawLine(cx + cos(angle) * inner, cy + sin(angle) * inner,
                 cx + cos(angle) * outer, cy + sin(angle) * outer,
-                paint(p.muted, alpha = 145, stroke = if (index % 2 == 0) 2f * scale else scale))
+                paint(p.muted, alpha = 205,
+                    stroke = if (index % 2 == 0) 2.6f * scale else 1.5f * scale))
         }
 
         val angle = radians(start + sweep * fraction)
         canvas.drawLine(cx + cos(angle) * radius * .70f, cy + sin(angle) * radius * .70f,
             cx + cos(angle) * radius * .90f, cy + sin(angle) * radius * .90f,
-            paint(p.sage, stroke = 4f * scale))
+            paint(p.sage, stroke = 5f * scale))
         centeredText(canvas, speed.roundToInt().toString(), cx, cy + 20f * scale,
-            72f * scale, p.primary)
-        centeredText(canvas, "MPH", cx, cy + 48f * scale, 14f * scale, p.muted)
+            72f * scale, p.primary, bold = true)
+        centeredText(canvas, "MPH", cx, cy + 48f * scale, 15f * scale, p.muted, bold = true)
     }
 
     private fun drawCompass(
         canvas: Canvas, heading: Float, cx: Float, cy: Float, radius: Float,
         p: Palette, scale: Float,
     ) {
-        canvas.drawCircle(cx, cy, radius, paint(p.muted, alpha = 80, stroke = 2f * scale))
+        canvas.drawCircle(cx, cy, radius, paint(p.muted, alpha = 125, stroke = 3f * scale))
         repeat(24) { index ->
             val angle = radians(-90f + index * 15f)
             val outer = radius
             val inner = radius - (if (index % 6 == 0) 10f else 5f) * scale
             canvas.drawLine(cx + cos(angle) * inner, cy + sin(angle) * inner,
                 cx + cos(angle) * outer, cy + sin(angle) * outer,
-                paint(p.muted, alpha = 125, stroke = scale))
+                paint(p.muted, alpha = 185, stroke = 1.4f * scale))
         }
         cardinal(canvas, "N", cx, cy - radius * .69f, p.accent, scale)
         cardinal(canvas, "E", cx + radius * .69f, cy + 5f * scale, p.muted, scale)
@@ -133,20 +137,21 @@ class DashboardRenderer(context: Context) {
         canvas.drawPath(arrow, paint(p.accent))
         canvas.drawCircle(cx, cy, 4f * scale, paint(p.primary))
         centeredText(canvas, TelemetryFormat.heading(heading), cx, cy + radius + 26f * scale,
-            15f * scale, p.primary)
+            16f * scale, p.primary, bold = true)
     }
 
     private fun drawClock(
         canvas: Canvas, time: LocalTime, cx: Float, cy: Float, radius: Float,
         p: Palette, scale: Float,
     ) {
-        canvas.drawCircle(cx, cy, radius, paint(p.muted, alpha = 80, stroke = 2f * scale))
+        canvas.drawCircle(cx, cy, radius, paint(p.muted, alpha = 125, stroke = 3f * scale))
         repeat(12) { index ->
             val angle = radians(-90f + index * 30f)
             val inner = radius - (if (index % 3 == 0) 10f else 6f) * scale
             canvas.drawLine(cx + cos(angle) * inner, cy + sin(angle) * inner,
                 cx + cos(angle) * radius, cy + sin(angle) * radius,
-                paint(p.muted, alpha = 140, stroke = if (index % 3 == 0) 2f * scale else scale))
+                paint(p.muted, alpha = 190,
+                    stroke = if (index % 3 == 0) 2.4f * scale else 1.4f * scale))
         }
         val minuteAngle = radians(time.minute * 6f - 90f)
         val hourAngle = radians((time.hour % 12 + time.minute / 60f) * 30f - 90f)
@@ -156,7 +161,7 @@ class DashboardRenderer(context: Context) {
             cy + sin(minuteAngle) * radius * .72f, paint(p.accent, stroke = 3f * scale))
         canvas.drawCircle(cx, cy, 5f * scale, paint(p.primary))
         centeredText(canvas, time.format(CLOCK), cx, cy + radius + 26f * scale,
-            17f * scale, p.primary)
+            18f * scale, p.primary, bold = true)
     }
 
     private fun drawElevation(
@@ -169,13 +174,13 @@ class DashboardRenderer(context: Context) {
         val top = height * .79f
         val bottom = height * .95f
         val altitude = telemetry.elevationFeet?.let { "%,.0f".format(it) } ?: "—"
-        text(canvas, altitude, left, top + 30f * scale, 31f * scale, p.primary)
+        text(canvas, altitude, left, top + 30f * scale, 31f * scale, p.primary, bold = true)
         text(canvas, "FT", left + measure(altitude, 31f * scale) + 6f * scale,
-            top + 27f * scale, 11f * scale, p.muted)
+            top + 27f * scale, 12f * scale, p.muted, bold = true)
         text(canvas, TelemetryFormat.grade(telemetry.gradePercent), left,
-            bottom, 14f * scale, p.accent)
+            bottom, 15f * scale, p.accent, bold = true)
         text(canvas, "${telemetry.tripMiles.roundToInt()} MI", left + 73f * scale,
-            bottom, 14f * scale, p.muted)
+            bottom, 15f * scale, p.muted, bold = true)
 
         val values = elevations.toList()
         if (values.size < 2 || graphLeft >= right) return
@@ -184,10 +189,28 @@ class DashboardRenderer(context: Context) {
         val padding = max(60f, (high - low) * .12f)
         val path = graphPath(values, graphLeft, right, top, bottom, low - padding, high + padding)
         val fill = Path(path).apply { lineTo(right, bottom); lineTo(graphLeft, bottom); close() }
-        canvas.drawPath(fill, paint(p.accent, alpha = 40))
-        canvas.drawPath(path, paint(p.accent, stroke = 3f * scale))
+        canvas.drawPath(fill, paint(p.accent, alpha = 62))
+        canvas.drawPath(path, paint(p.accent, stroke = 4.5f * scale))
         canvas.drawCircle(right, projectY(values.last(), top, bottom, low - padding, high + padding),
-            4f * scale, paint(p.accent))
+            5f * scale, paint(p.accent))
+    }
+
+    private fun drawGpsAccuracy(
+        canvas: Canvas, accuracyFeet: Float?, width: Float, height: Float,
+        p: Palette, scale: Float,
+    ) {
+        val accuracy = accuracyFeet ?: return
+        val cx = width * .055f
+        val cy = height * .835f
+        repeat(3) { index ->
+            val radius = (7f + index * 7f) * scale
+            canvas.drawArc(RectF(cx - radius, cy - radius, cx + radius, cy + radius),
+                205f, 130f, false, paint(if (index == 0) p.sage else p.muted,
+                    alpha = 210 - index * 34, stroke = 2.2f * scale))
+        }
+        canvas.drawCircle(cx, cy, 3.5f * scale, paint(p.sage))
+        text(canvas, "±${accuracy.roundToInt()} FT", width * .092f, cy + 5f * scale,
+            14f * scale, p.primary, bold = true)
     }
 
     private fun drawVehicleData(
@@ -201,11 +224,11 @@ class DashboardRenderer(context: Context) {
         }
         if (values.isEmpty()) return
         val label = values.joinToString("  ·  ")
-        text(canvas, label, width * .02f, height * .96f, 13f * scale, p.muted)
+        text(canvas, label, width * .02f, height * .96f, 14f * scale, p.muted, bold = true)
     }
 
     private fun cardinal(canvas: Canvas, value: String, x: Float, y: Float, color: Int, scale: Float) =
-        centeredText(canvas, value, x, y, 13f * scale, color)
+        centeredText(canvas, value, x, y, 14f * scale, color, bold = true)
 
     private fun graphPath(
         values: List<Float>, left: Float, right: Float, top: Float, bottom: Float,
@@ -235,13 +258,21 @@ class DashboardRenderer(context: Context) {
             }
         }
 
-    private fun text(canvas: Canvas, value: String, x: Float, y: Float, size: Float, color: Int) =
-        canvas.drawText(value, x, y, paint(color).apply { textSize = size; typeface = this@DashboardRenderer.typeface })
+    private fun text(
+        canvas: Canvas, value: String, x: Float, y: Float, size: Float, color: Int,
+        bold: Boolean = false,
+    ) = canvas.drawText(value, x, y, paint(color).apply {
+        textSize = size
+        typeface = if (bold) boldTypeface else this@DashboardRenderer.typeface
+    })
 
-    private fun centeredText(canvas: Canvas, value: String, x: Float, y: Float, size: Float, color: Int) =
+    private fun centeredText(
+        canvas: Canvas, value: String, x: Float, y: Float, size: Float, color: Int,
+        bold: Boolean = false,
+    ) =
         canvas.drawText(value, x, y, paint(color).apply {
             textSize = size
-            typeface = this@DashboardRenderer.typeface
+            typeface = if (bold) boldTypeface else this@DashboardRenderer.typeface
             textAlign = Paint.Align.CENTER
         })
 
@@ -259,10 +290,10 @@ class DashboardRenderer(context: Context) {
         val dark: Boolean,
     ) {
         companion object {
-            val day = Palette(Color.rgb(218, 215, 205), Color.rgb(38, 41, 38),
-                Color.rgb(105, 108, 101), Color.rgb(174, 108, 65), Color.rgb(91, 129, 114), false)
-            val night = Palette(Color.rgb(25, 28, 26), Color.rgb(237, 232, 220),
-                Color.rgb(151, 155, 147), Color.rgb(204, 150, 98), Color.rgb(137, 174, 157), true)
+            val day = Palette(Color.rgb(225, 222, 211), Color.rgb(26, 29, 27),
+                Color.rgb(77, 81, 75), Color.rgb(164, 86, 43), Color.rgb(61, 112, 94), false)
+            val night = Palette(Color.rgb(18, 21, 19), Color.rgb(247, 242, 230),
+                Color.rgb(187, 191, 181), Color.rgb(220, 157, 93), Color.rgb(155, 194, 174), true)
         }
     }
 

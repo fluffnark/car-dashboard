@@ -1,6 +1,7 @@
 package com.fluffnark.motoringdashboard.trip
 
 import android.content.Context
+import com.google.android.gms.common.api.ApiException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -101,4 +102,18 @@ internal class GoogleTasksApi(private val token: String) {
     }
 
     private fun encode(value: String): String = URLEncoder.encode(value, StandardCharsets.UTF_8.toString())
+}
+
+internal fun googleTasksErrorLabel(error: Throwable): String {
+    val message = error.message.orEmpty()
+    return when {
+        (error as? ApiException)?.statusCode == 10 -> "OAUTH CLIENT MISMATCH"
+        message.contains("verification process", ignoreCase = true) ||
+            message.contains("access_denied", ignoreCase = true) -> "ADD OAUTH TEST USER"
+        message.contains("Tasks API", ignoreCase = true) &&
+            message.contains("disabled", ignoreCase = true) -> "ENABLE TASKS API"
+        message.contains("insufficient authentication", ignoreCase = true) -> "CHECK TASKS SCOPE"
+        message.contains("401") -> "RECONNECT GOOGLE"
+        else -> message.take(42).ifBlank { "SYNC FAILED" }
+    }
 }

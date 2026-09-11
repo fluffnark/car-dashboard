@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fluffnark.motoringdashboard.trip.TripListRepository
 import com.fluffnark.motoringdashboard.trip.GoogleTasksSync
+import com.fluffnark.motoringdashboard.trip.googleTasksErrorLabel
 import com.fluffnark.motoringdashboard.data.DisplayPreferences
 import com.fluffnark.motoringdashboard.data.DisplayTheme
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
@@ -83,7 +84,7 @@ private fun SetupScreen() {
                     tripItems = tripList.items()
                     syncStatus = "$count SYNCED"
                 }
-                .onFailure { error -> syncStatus = error.message?.take(42) ?: "SYNC FAILED" }
+                .onFailure { error -> syncStatus = googleTasksErrorLabel(error) }
         }
     }
     val authorizationResult = rememberLauncherForActivityResult(
@@ -94,7 +95,7 @@ private fun SetupScreen() {
                 .onSuccess { auth -> auth.accessToken?.let(syncWithToken) ?: run { syncStatus = "NO TOKEN" } }
                 .onFailure { syncStatus = "SIGN-IN FAILED" }
         } else {
-            syncStatus = "LOCAL"
+            syncStatus = "ACCESS NOT GRANTED"
         }
     }
     val beginGoogleSync: () -> Unit = {
@@ -113,7 +114,7 @@ private fun SetupScreen() {
                     result.accessToken?.let(syncWithToken) ?: run { syncStatus = "NO TOKEN" }
                 }
             }
-            .addOnFailureListener { error -> syncStatus = error.message?.take(42) ?: "CONNECT FAILED" }
+            .addOnFailureListener { error -> syncStatus = googleTasksErrorLabel(error) }
         Unit
     }
     CompositionLocalProvider(LocalTextStyle provides LocalTextStyle.current.copy(fontFamily = InstrumentFamily)) {

@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -155,14 +156,25 @@ private fun SetupScreen() {
                 singleLine = true,
                 modifier = Modifier.weight(1f),
                 shape = RectangleShape,
+                textStyle = TextStyle(
+                    color = Chalk,
+                    fontFamily = InstrumentFamily,
+                    fontSize = 16.sp,
+                ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Chalk,
                     unfocusedTextColor = Chalk,
+                    disabledTextColor = Muted,
+                    errorTextColor = Chalk,
                     cursorColor = Clay,
+                    errorCursorColor = Clay,
                     focusedBorderColor = Clay,
                     unfocusedBorderColor = Muted.copy(alpha = .45f),
+                    disabledBorderColor = Muted.copy(alpha = .25f),
+                    errorBorderColor = Clay,
                     focusedPlaceholderColor = Muted,
                     unfocusedPlaceholderColor = Muted,
+                    disabledPlaceholderColor = Muted,
                 ),
             )
             TextButton(onClick = {

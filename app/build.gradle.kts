@@ -21,8 +21,8 @@ android {
         applicationId = "com.fluffnark.motoringdashboard"
         minSdk = 28
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.8.0"
+        versionCode = 12
+        versionName = "0.8.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -68,8 +68,8 @@ tasks.register<Copy>("stagePrototypeRelease") {
     from(layout.buildDirectory.file("outputs/apk/release/app-release.apk"))
     from(layout.buildDirectory.file("outputs/bundle/release/app-release.aab"))
     into(rootProject.layout.projectDirectory.dir("releases"))
-    rename("app-release.apk", "motoring-dashboard-v0.8.0.apk")
-    rename("app-release.aab", "motoring-dashboard-v0.8.0.aab")
+    rename("app-release.apk", "motoring-dashboard-v0.8.1.apk")
+    rename("app-release.aab", "motoring-dashboard-v0.8.1.aab")
 }
 
 kotlin {

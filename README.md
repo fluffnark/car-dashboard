@@ -29,7 +29,7 @@ Outputs:
 
 - Debug APK: `app/build/outputs/apk/debug/app-debug.apk`
 - Signed release APK: `releases/motoring-dashboard-v0.9.0.apk`
-- Signed Play bundle: `releases/motoring-dashboard-v0.9.0.aab` (version code 15)
+- Signed Play bundle: `releases/motoring-dashboard-v0.9.0.aab` (version code 16)
 
 The ignored `signing/` directory contains the existing Play upload key. Keep it backed up; future Play updates must use that key.
 

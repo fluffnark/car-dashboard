@@ -51,5 +51,14 @@ class MapScreenTest {
 
         val updated = screen.onGetTemplate() as MapWithContentTemplate
         assertTrue(updated.contentTemplate is ListTemplate)
+
+        val row = (updated.contentTemplate as ListTemplate).singleList!!.items.single() as androidx.car.app.model.Row
+        assertEquals("○  Pick up coffee", row.title.toString())
+        assertNull(row.image)
+        row.onClickDelegate!!.sendClick(object : OnDoneCallback {})
+
+        val completed = screen.onGetTemplate() as MapWithContentTemplate
+        assertTrue(completed.contentTemplate is PaneTemplate)
+        assertEquals(1, completed.actionStrip!!.actions.size)
     }
 }

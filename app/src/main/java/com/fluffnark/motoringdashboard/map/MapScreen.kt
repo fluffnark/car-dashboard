@@ -87,7 +87,7 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
     override fun onDestroy(owner: LifecycleOwner) { handler.removeCallbacks(simulation); location.stop(); vehicleSource.stop(); surface.close() }
 
     override fun onGetTemplate(): Template {
-        val hasTripItems = tripList.items().isNotEmpty()
+        val hasTripItems = tripList.items().any { !it.done }
         val panel = when {
             content == Content.TRIP_LIST && hasTripItems -> tripList()
             else -> instruments()
@@ -126,12 +126,9 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
 
     private fun tripList(): ListTemplate {
         val list = ItemList.Builder()
-        val items = tripList.items()
-        items.sortedBy { it.done }.forEach { item ->
+        tripList.items().filterNot { it.done }.forEach { item ->
             list.addItem(Row.Builder()
-                .setTitle(item.title)
-                .setImage(CarIcon.Builder(IconCompat.createWithResource(carContext,
-                    if (item.done) R.drawable.ic_checked else R.drawable.ic_unchecked)).build(), Row.IMAGE_TYPE_ICON)
+                .setTitle("○  ${item.title.take(42)}")
                 .setOnClickListener { tripList.toggle(item.id); invalidate() }
                 .build())
         }

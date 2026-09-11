@@ -14,7 +14,7 @@ The 2021 CX-5 has a 10.25-inch Mazda Connect display and standard Android Auto a
 |---|---|---|---|---|
 | Clock/date | Phone-provided | Not needed | Standard Android | **Yes** |
 | Vehicle speed | Speedometer and multi-information display | Mazda explicitly confirms speed transfer | `CarInfo.addSpeedListener` | **Likely**, subject to permission/host |
-| Location | Navigation/compass functions | Mazda explicitly confirms location transfer | `CarSensors.addCarHardwareLocationListener` | Available to add; not displayed in v0.1 |
+| Location | Navigation/compass functions | Mazda explicitly confirms location transfer | Phone `LocationManager`; car-hardware location is also available to eligible apps | **Yes** from phone GPS; OEM feed not yet used |
 | Heading/compass | Native compass display | Not specified field-by-field | `CarSensors.addCompassListener` | Possible, but unconfirmed on this head unit |
 | Fuel level | Native fuel gauge | Only covered by “other vehicle data” | `CarInfo.addEnergyLevelListener` | Possible; unconfirmed |
 | Distance to empty | Native multi-information display | Only covered by “other vehicle data” | `CarInfo.addEnergyLevelListener` | Possible; unconfirmed |
@@ -42,6 +42,6 @@ After installing the APK and granting vehicle permissions, connect by USB and in
 1. Drive only in a safe, legal setting and compare app speed with the Mazda speedometer.
 2. Compare fuel percentage and range with the multi-information display.
 3. Compare odometer with the cluster.
-4. Any em dash means Android Auto returned unavailable, unimplemented, or permission denied—it does not mean the Mazda lacks the underlying sensor.
+4. A missing optional gauge means Android Auto returned unavailable, unimplemented, or permission denied—it does not mean the Mazda lacks the underlying sensor.
 
-If fuel or mileage remains unavailable, the supported next option is an external Bluetooth Low Energy OBD-II adapter with a separate, carefully permissioned phone-side data source. OBD integration is not included in v0.1.
+If fuel or mileage remains unavailable, the supported next option is an external Bluetooth Low Energy OBD-II adapter with a separate, carefully permissioned phone-side data source. OBD integration is not included in v0.7.0.

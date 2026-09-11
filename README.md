@@ -1,21 +1,19 @@
 # Motoring Dashboard
 
-Motoring Dashboard is an Android Auto map and point-of-interest prototype for calm, glanceable driving information. Its custom MapLibre cartography mixes warm mid-century color with the restraint of a modern instrument cluster. It targets a Pixel 7/7a projected to a 2021 Mazda CX-5 Grand Touring, while adapting to other Android Auto displays.
+Motoring Dashboard is a low-distraction Android Auto instrument prototype for a Pixel 7/7a projected to a 2021 Mazda CX-5 Grand Touring. Version 0.7.0 removes the live map and presents a calm, mid-century-modern dashboard drawn directly on Android Auto's official car surface.
 
-## Current 0.6.0 concept
+## Current concept
 
-- Custom vector map rendered directly into Android Auto's official map `Surface`
-- Warm, Scandinavian, and technical cartography; dedicated day and night palettes
-- GPS speed, heading, elevation, grade, and trip distance with an elevation profile and speed dial
-- Instrument Sans telemetry artwork layered over the map rather than constrained to stock host cards
-- Optional Android Auto car-hardware speed, fuel, range, mileage, and model readings
-- Restrained San Juan Mountains POI markers without a separate places panel
-- Pan, zoom, recenter, rotary-compatible host controls, and automatic day/night response
+- Large analog-style speed, compass, and clock instruments
+- Recent elevation sparkline, altitude, grade, trip distance, and optional fuel/range
+- Instrument Sans typography with separate warm day and graphite night palettes
+- One-frame-per-second maximum rendering; no map engine, tile traffic, virtual display, or animation loop
+- Host-rendered persistent controls and lists for Mazda Commander-knob focus
+- Offline trip checklist edited on the phone and checked on the car display
 - Parked-only **Voice** action for the installed official ChatGPT app
-- Offline trip checklist: edit on the phone, check items with touch or Mazda rotary controls
 - Deterministic US-550 simulated drive in debug builds
 
-The Mazda and Android Auto decide which car-hardware values are exposed. Missing readings remain unavailable; the app does not estimate or invent them. See [Mazda data research](docs/MAZDA_DATA.md).
+The Mazda and Android Auto decide which car-hardware values are exposed. Missing readings stay hidden; the app never invents them. See [Mazda data research](docs/MAZDA_DATA.md).
 
 ## Build
 
@@ -29,20 +27,20 @@ Requirements: JDK 17 and Android SDK 36.
 Outputs:
 
 - Debug APK: `app/build/outputs/apk/debug/app-debug.apk`
-- Signed release APK: `releases/motoring-dashboard-v0.6.0.apk`
-- Signed Play bundle: `releases/motoring-dashboard-v0.6.0.aab` (version code 9)
+- Signed release APK: `releases/motoring-dashboard-v0.7.0.apk`
+- Signed Play bundle: `releases/motoring-dashboard-v0.7.0.aab` (version code 10)
 
-The ignored `signing/` directory contains the existing Play upload key. Keep it backed up; future Play updates must use that same upload key.
+The ignored `signing/` directory contains the existing Play upload key. Keep it backed up; future Play updates must use that key.
 
 ## Run on Pixel 7 / 7a and Mazda
 
-1. Upload the 0.6.0 AAB to the existing Play internal-test track. Do not include an older, shadowed bundle in the same release.
-2. Install the update from the track's tester link using the enrolled Google account.
-3. Open the phone app once and choose a map palette.
-4. In Android Auto, enable **Motoring Dashboard** under **Customize launcher** and reconnect USB.
-5. Open Motoring Dashboard on the Mazda and grant location and optional vehicle-data permissions.
+1. Upload the 0.7.0 AAB to the existing Play internal-test track, or install the signed APK.
+2. Open the phone app once and add any trip-list items.
+3. In Android Auto, enable **Motoring Dashboard** under **Customize launcher**, then reconnect USB.
+4. Open Motoring Dashboard and grant location and optional vehicle-data permissions.
+5. Turn the Mazda Commander knob to move the visible focus ring; press it to activate the checklist or Voice action.
 
-The release is a genuine `androidx.car.app.category.POI` app using map templates, not media-category scaffolding or screen mirroring. A Play-reviewed production release still depends on Google's category and car-quality review.
+The custom surface currently requires Android Auto's map-template capability and is packaged as a POI prototype. Because 0.7.0 intentionally has no map or POI browser, it is suitable for internal design testing but is not ready for public POI-category review. Android Auto therefore also treats it as a map-like app in dashboard/split layouts and may pair it with media or retain another navigation pane according to host policy. A true media-category build would pair correctly with navigation, but Android Auto would replace this custom artwork with its standard media template.
 
 ## Desktop Head Unit
 
@@ -53,34 +51,31 @@ adb forward tcp:5277 tcp:5277
 desktop-head-unit
 ```
 
-Debug builds automatically run a repeatable drive south from Ouray on US-550, changing position, speed, heading, elevation, and grade every three seconds. Release builds never draw or run the simulated route. Use DHU controls to switch day/night mode and test pan, zoom, recenter, touch, and rotary focus.
+Debug builds run a repeatable drive south from Ouray on US-550, updating speed, heading, elevation, and grade once per second. Release builds never run simulated data.
 
-Suggested DHU checks:
+Check these paths in the DHU and the Mazda:
 
-- start, disconnect/reconnect, and reopen the app
-- switch all three palettes in both day and night modes
-- pan away and verify recenter resumes following
-- open and check the trip list with touch and rotary focus
-- deny location and vehicle permissions, then grant them
-- test offline/no-tile behavior and GPS loss
-- inspect `adb logcat` for MapLibre or car-app exceptions
+- initial start, app reopen, disconnect/reconnect, and repeated surface recreation
+- day/night changes and loss of GPS or vehicle data
+- Commander-knob focus and press on both persistent actions and checklist rows
+- at least ten minutes of simulated updates while watching `adb logcat` for exceptions or ANRs
 
 ## ChatGPT voice
 
-The launcher first checks at runtime for the official ChatGPT app's exported `com.openai.voice.assistant.AssistantActivity`. If callable, the parked-only car action launches it on the phone's default display and returns to Android Auto after initialization; otherwise the app falls back to ChatGPT's public launcher. This component is not a documented OpenAI API and may change. Install and sign in to ChatGPT first. Enable **Settings → Voice → Background conversations** in ChatGPT so the conversation continues after returning to the map. End the session with ChatGPT's phone-side exit control; OpenAI does not document a third-party stop intent.
+The launcher runtime-checks the official ChatGPT app's exported `com.openai.voice.assistant.AssistantActivity`. If callable, the parked-only action starts it on the phone and returns the phone to its home screen after initialization; otherwise it opens ChatGPT normally. The activity is not a documented OpenAI API and may change. Install and sign in to ChatGPT, then enable **Settings → Voice → Background conversations**.
 
-## Trip list and voice sync
+There is no documented third-party intent for ending a ChatGPT voice conversation. The car button therefore starts Voice but does not pretend to be a reliable on/off toggle; end the session with ChatGPT's own control on the phone.
 
-The current trip list is deliberately local and works without a network. Google Keep is not a suitable direct consumer-app backend: its public API is aimed at administrator-approved enterprise use. Google Tasks has a supported read/write API and is the intended cloud-sync path once a Google OAuth client is configured. Gemini can already add to Keep lists, but current ChatGPT Voice documentation does not promise connected-app actions, so the app does not claim that both assistants can edit one cloud list yet.
+## Trip list and assistant sync
+
+The checklist is currently local and offline. It now uses a `TripListStore` provider seam so an authenticated Google Tasks adapter can replace local storage without changing the Mazda UI. Google Tasks is the cleanest future shared-list backend because it has a supported read/write API. Google Keep's API is intended for administrator-approved enterprise use, and current ChatGPT Voice integrations do not guarantee write access to the same Keep list. See [Google Tasks hook](docs/GOOGLE_TASKS.md).
 
 ## Screenshots
 
-- [Android Auto day mode](docs/screenshots/android-auto-day.png)
-- [Android Auto night mode](docs/screenshots/android-auto-night.png)
+- [Instrument surface — day](docs/screenshots/android-auto-day.png)
+- [Instrument surface — night](docs/screenshots/android-auto-night.png)
 
-Android may reject background activity launches in some host/OS states. This feature is deliberately secondary and parked-only; it may need to be omitted from a Play-reviewed POI release if car-quality review considers it unrelated to the app category.
-
-## Architecture
+These images are deterministic surface renders. Android Auto adds its own action strip, compact status pane, focus ring, and system bar on top.
 
 See [Architecture](docs/ARCHITECTURE.md) and [third-party notices](docs/THIRD_PARTY_NOTICES.md).
 

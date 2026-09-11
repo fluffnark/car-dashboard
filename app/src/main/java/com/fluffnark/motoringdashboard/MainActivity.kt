@@ -27,8 +27,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.fluffnark.motoringdashboard.map.MapPreferences
-import com.fluffnark.motoringdashboard.map.MapStyle
 import com.fluffnark.motoringdashboard.trip.TripListRepository
 
 private val Graphite = Color(0xFF20211E)
@@ -48,7 +46,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun SetupScreen() {
     val context = LocalContext.current
-    var selected by remember { mutableStateOf(MapPreferences.getLook(context)) }
     val tripList = remember { TripListRepository(context) }
     var tripItems by remember { mutableStateOf(tripList.items()) }
     var newItem by remember { mutableStateOf("") }
@@ -64,25 +61,13 @@ private fun SetupScreen() {
         Spacer(Modifier.height(24.dp))
         Text("Motoring", color = Chalk, fontSize = 48.sp, fontWeight = FontWeight.Light,
             letterSpacing = (-1.5).sp)
-        Text("ROAD ATLAS", color = Clay, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+        Text("DRIVE INSTRUMENTS", color = Clay, fontSize = 12.sp, fontWeight = FontWeight.Bold,
             letterSpacing = 2.sp)
         Spacer(Modifier.height(30.dp))
-        TerrainPreview()
+        InstrumentPreview()
         Spacer(Modifier.height(28.dp))
-        Text("A calm map, useful places, and honest drive telemetry for the Mazda display.",
+        Text("Calm, glanceable drive telemetry for the Mazda display.",
             color = Chalk, fontSize = 18.sp, lineHeight = 26.sp)
-        Spacer(Modifier.height(30.dp))
-        Text("CARTOGRAPHY", color = Muted, fontSize = 10.sp, fontWeight = FontWeight.Bold,
-            letterSpacing = 1.5.sp)
-        Spacer(Modifier.height(12.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            MapStyle.Look.entries.forEach { look ->
-                PaletteChoice(look, selected == look, Modifier.weight(1f)) {
-                    selected = look
-                    MapPreferences.setLook(context, look)
-                }
-            }
-        }
         Spacer(Modifier.height(30.dp))
         Text("TRIP LIST", color = Muted, fontSize = 10.sp, fontWeight = FontWeight.Bold,
             letterSpacing = 1.5.sp)
@@ -128,41 +113,25 @@ private fun SetupScreen() {
             Text("Start ChatGPT voice", color = Chalk)
         }
         Spacer(Modifier.height(12.dp))
-        Text("The car action is parked-only. Enable Background conversations in ChatGPT Voice settings if you want the conversation to continue after returning to the map.",
+        Text("The car action is parked-only. Enable Background conversations in ChatGPT Voice settings if you want the conversation to continue after returning to the instruments.",
             color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
     }
 }
 
 @Composable
-private fun TerrainPreview() {
+private fun InstrumentPreview() {
     Canvas(Modifier.fillMaxWidth().height(150.dp).background(Color(0xFF292B27))) {
-        repeat(5) { index ->
-            val path = Path().apply {
-                moveTo(0f, size.height * (0.25f + index * 0.12f))
-                cubicTo(size.width * .25f, size.height * (.05f + index * .15f),
-                    size.width * .55f, size.height * (.65f + index * .04f),
-                    size.width, size.height * (.22f + index * .13f))
-            }
-            drawPath(path, if (index == 2) Clay else Sage.copy(alpha = .35f),
-                style = Stroke(if (index == 2) 3.dp.toPx() else 1.dp.toPx()))
+        val radius = size.height * .31f
+        listOf(.19f, .5f, .81f).forEachIndexed { index, fraction ->
+            drawCircle(if (index == 0) Sage else Muted.copy(alpha = .55f), radius,
+                Offset(size.width * fraction, size.height * .49f), style = Stroke(if (index == 0) 3.dp.toPx() else 1.dp.toPx()))
         }
-        drawCircle(Chalk, 7.dp.toPx(), Offset(size.width * .57f, size.height * .54f))
-        drawCircle(Graphite, 3.dp.toPx(), Offset(size.width * .57f, size.height * .54f))
-    }
-}
-
-@Composable
-private fun PaletteChoice(look: MapStyle.Look, selected: Boolean, modifier: Modifier, choose: () -> Unit) {
-    val accent = when (look) {
-        MapStyle.Look.WARM -> Clay
-        MapStyle.Look.SCANDINAVIAN -> Color(0xFF78999B)
-        MapStyle.Look.TECHNICAL -> Color(0xFFB08A59)
-    }
-    Column(modifier.clickable(onClick = choose).padding(vertical = 8.dp)) {
-        Box(Modifier.fillMaxWidth().height(5.dp).background(if (selected) accent else Color(0xFF4A4D48)))
-        Spacer(Modifier.height(8.dp))
-        Text(look.name.lowercase().replaceFirstChar(Char::uppercase),
-            color = if (selected) Chalk else Muted, fontSize = 12.sp)
+        val profile = Path().apply {
+            moveTo(size.width * .58f, size.height * .80f)
+            cubicTo(size.width * .68f, size.height * .76f, size.width * .78f,
+                size.height * .58f, size.width * .94f, size.height * .63f)
+        }
+        drawPath(profile, Clay, style = Stroke(3.dp.toPx()))
     }
 }
 

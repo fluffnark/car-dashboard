@@ -82,7 +82,7 @@ class VehicleDataSource(
         mileageRegistered = false
     }
 
-    fun hasAllPermissions(): Boolean = PERMISSIONS.all(::has)
+    fun hasAnyPermission(): Boolean = PERMISSIONS.any(::has)
 
     fun requestPermissions(onComplete: () -> Unit) {
         context.requestPermissions(PERMISSIONS.filterNot(::has)) { _, _ ->

@@ -21,8 +21,8 @@ android {
         applicationId = "com.fluffnark.motoringdashboard"
         minSdk = 28
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.6.0"
+        versionCode = 10
+        versionName = "0.7.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -68,8 +68,8 @@ tasks.register<Copy>("stagePrototypeRelease") {
     from(layout.buildDirectory.file("outputs/apk/release/app-release.apk"))
     from(layout.buildDirectory.file("outputs/bundle/release/app-release.aab"))
     into(rootProject.layout.projectDirectory.dir("releases"))
-    rename("app-release.apk", "motoring-dashboard-v0.6.0.apk")
-    rename("app-release.aab", "motoring-dashboard-v0.6.0.aab")
+    rename("app-release.apk", "motoring-dashboard-v0.7.0.apk")
+    rename("app-release.aab", "motoring-dashboard-v0.7.0.aab")
 }
 
 kotlin {
@@ -79,19 +79,15 @@ kotlin {
 }
 
 dependencies {
-    implementation("org.maplibre.gl:android-sdk:13.6.0")
-    // Newer releases require the API 37 / AGP 9.1 preview toolchain.
     implementation(platform("androidx.compose:compose-bom:2025.08.01"))
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.3")
     implementation("androidx.car.app:app:1.8.0-rc01")
     implementation("androidx.car.app:app-projected:1.8.0-rc01")
 
-    debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
     testImplementation("androidx.car.app:app-testing:1.8.0-rc01")
     testImplementation("org.robolectric:robolectric:4.16.1")

@@ -73,9 +73,16 @@ private fun SetupScreen() {
     var displayTheme by remember { mutableStateOf(DisplayPreferences.theme(context)) }
     var newItem by remember { mutableStateOf("") }
     var syncStatus by remember { mutableStateOf("LOCAL") }
+    var backgroundVersion by remember { mutableIntStateOf(0) }
     val activity = context as ComponentActivity
     val authorization = remember(activity) { Identity.getAuthorizationClient(activity) }
     val scope = rememberCoroutineScope()
+    val backgroundPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent(),
+    ) { uri ->
+        if (uri != null && DisplayPreferences.importBackground(context, uri)) backgroundVersion++
+    }
+    val hasBackground = remember(backgroundVersion) { DisplayPreferences.hasBackground(context) }
     val syncWithToken: (String) -> Unit = { token ->
         syncStatus = "SYNCING"
         scope.launch {
@@ -141,6 +148,23 @@ private fun SetupScreen() {
         DisplayThemeSelector(displayTheme) { selected ->
             DisplayPreferences.setTheme(context, selected)
             displayTheme = selected
+        }
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("BACKGROUND", color = Muted, fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                Text(if (hasBackground) "PHOTO · DIMMED" else "TONAL FIELD",
+                    color = if (hasBackground) Sage else Muted, fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold, letterSpacing = .8.sp)
+            }
+            TextButton(onClick = { backgroundPicker.launch("image/*") }) {
+                Text("CHOOSE", color = Clay, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+            if (hasBackground) TextButton(onClick = {
+                DisplayPreferences.clearBackground(context)
+                backgroundVersion++
+            }) { Text("CLEAR", color = Muted, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
         }
         Spacer(Modifier.height(28.dp))
         Text("Calm, glanceable drive telemetry for the Mazda display.",

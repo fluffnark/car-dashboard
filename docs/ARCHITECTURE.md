@@ -1,6 +1,6 @@
 # Architecture
 
-`DashboardCarAppService` creates a `DashboardSession` whose root `MapScreen` supplies Android Auto's host-rendered `MapWithContentTemplate`, persistent action strip, and checklist. The class name remains for compatibility with the prototype history; there is no map renderer in 0.10.1.
+`DashboardCarAppService` creates a `DashboardSession` whose root `MapScreen` supplies Android Auto's host-rendered `MapWithContentTemplate`, persistent action strip, and checklist. The class name remains for compatibility with the prototype history; there is no map renderer in 0.10.2.
 
 `DashboardSurface` receives the official Android Auto `Surface` through `AppManager.setSurfaceCallback`. A dedicated `HandlerThread` locks its canvas only when data, theme, surface geometry, or the minute changes. Pending telemetry frames are coalesced and limited to one per second. `DashboardRenderer` draws the Instrument Sans speed dial, rotating compass card, clock, full-trip distance/elevation profile with 1,000-foot tick marks, altitude, grade, trip, and available vehicle values directly to that canvas. `TripElevationProfile` adaptively decimates only when necessary so long trips retain their complete horizontal context without unbounded memory growth.
 

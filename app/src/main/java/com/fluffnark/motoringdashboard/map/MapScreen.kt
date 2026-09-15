@@ -31,6 +31,7 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
     private val displayPreferences = DisplayPreferences.preferences(context)
     private val displayPreferenceListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
         surface.night = DisplayPreferences.isNight(carContext, carContext.isDarkMode)
+        surface.backgroundFile = DisplayPreferences.backgroundFile(carContext)
     }
     private val tripPreferences = context.getSharedPreferences("trip_list", android.content.Context.MODE_PRIVATE)
     private val tripPreferenceListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
@@ -70,6 +71,7 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
         displayPreferences.registerOnSharedPreferenceChangeListener(displayPreferenceListener)
         tripPreferences.registerOnSharedPreferenceChangeListener(tripPreferenceListener)
         surface.night = DisplayPreferences.isNight(carContext, carContext.isDarkMode)
+        surface.backgroundFile = DisplayPreferences.backgroundFile(carContext)
         carContext.getCarService(AppManager::class.java).setSurfaceCallback(surface)
         surface.update(telemetry)
         surface.updateVehicle(vehicle)

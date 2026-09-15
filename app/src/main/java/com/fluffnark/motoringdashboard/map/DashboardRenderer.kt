@@ -3,9 +3,15 @@ package com.fluffnark.motoringdashboard.map
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.RadialGradient
+import android.graphics.Shader
 import android.graphics.Typeface
 import androidx.core.content.res.ResourcesCompat
 import com.fluffnark.motoringdashboard.R
@@ -16,6 +22,7 @@ import com.fluffnark.motoringdashboard.data.TripElevationProfile
 import com.fluffnark.motoringdashboard.data.VehicleData
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.io.File
 import kotlin.math.cos
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -29,6 +36,17 @@ class DashboardRenderer(context: Context) {
     private val typeface = ResourcesCompat.getFont(context, R.font.instrument_sans)
     private val boldTypeface = Typeface.create(typeface, Typeface.BOLD)
     private val elevationProfile = TripElevationProfile()
+    private var background: Bitmap? = null
+    private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        alpha = 34
+        colorFilter = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(.12f) })
+    }
+
+    @Synchronized
+    fun setBackground(file: File?) {
+        background?.recycle()
+        background = file?.let { BitmapFactory.decodeFile(it.absolutePath) }
+    }
 
     @Synchronized
     fun record(telemetry: DriveTelemetry) {
@@ -63,11 +81,21 @@ class DashboardRenderer(context: Context) {
     }
 
     private fun drawBackdrop(canvas: Canvas, width: Float, height: Float, p: Palette, scale: Float) {
-        val rule = paint(p.muted, alpha = if (p.dark) 48 else 54, stroke = 1.5f * scale)
-        canvas.drawLine(width * .32f, height * .30f, width * .32f, height * .96f, rule)
-        canvas.drawLine(width * .62f, height * .30f, width * .62f, height * .73f, rule)
-        canvas.drawArc(RectF(width * .33f, height * .17f, width * .96f, height * 1.31f),
-            198f, 112f, false, paint(p.accent, alpha = if (p.dark) 34 else 30, stroke = 2.5f * scale))
+        background?.let {
+            canvas.drawBitmap(it, null, RectF(0f, 0f, width, height), backgroundPaint)
+            canvas.drawRect(0f, 0f, width, height, paint(p.background, alpha = 201))
+        }
+        // Soft tonal washes keep the face warm and dimensional without visible geometry.
+        val warmCx = width * .82f
+        val warmCy = height * .27f
+        val warmRadius = height * .38f
+        canvas.drawCircle(warmCx, warmCy, warmRadius,
+            washPaint(p.accent, if (p.dark) 19 else 14, warmCx, warmCy, warmRadius))
+        val coolCx = width * .22f
+        val coolCy = height * .77f
+        val coolRadius = height * .35f
+        canvas.drawCircle(coolCx, coolCy, coolRadius,
+            washPaint(p.sage, if (p.dark) 17 else 13, coolCx, coolCy, coolRadius))
         canvas.drawRect(width * .34f, height * .065f, width * .405f, height * .074f, paint(p.accent))
         canvas.drawRect(width * .41f, height * .065f, width * .455f, height * .074f, paint(p.sage))
     }
@@ -308,6 +336,15 @@ class DashboardRenderer(context: Context) {
                 strokeJoin = Paint.Join.ROUND
             }
         }
+
+    private fun washPaint(color: Int, peakAlpha: Int, cx: Float, cy: Float, radius: Float) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        shader = RadialGradient(
+            cx, cy, radius,
+            Color.argb(peakAlpha, Color.red(color), Color.green(color), Color.blue(color)),
+            Color.TRANSPARENT,
+            Shader.TileMode.CLAMP,
+        )
+    }
 
     private fun text(
         canvas: Canvas, value: String, x: Float, y: Float, size: Float, color: Int,

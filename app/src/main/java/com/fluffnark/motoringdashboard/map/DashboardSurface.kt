@@ -1,6 +1,7 @@
 package com.fluffnark.motoringdashboard.map
 
 import android.graphics.Rect
+import java.io.File
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
@@ -27,6 +28,13 @@ class DashboardSurface(context: CarContext) : SurfaceCallback {
     var night: Boolean = context.isDarkMode
         set(value) {
             field = value
+            requestFrame(force = true)
+        }
+
+    var backgroundFile: File? = null
+        set(value) {
+            field = value
+            renderer.setBackground(value)
             requestFrame(force = true)
         }
 

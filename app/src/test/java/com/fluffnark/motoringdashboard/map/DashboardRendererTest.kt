@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import com.fluffnark.motoringdashboard.data.VehicleData
 import com.fluffnark.motoringdashboard.debug.SimulationRoute
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -18,6 +19,12 @@ import java.time.LocalTime
 @Config(sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class DashboardRendererTest {
+    @Test fun compassCardRotatesOppositeVehicleHeading() {
+        assertEquals(-90f, compassAngleDegrees(90f, 90f), .001f) // East is ahead.
+        assertEquals(-180f, compassAngleDegrees(0f, 90f), .001f) // North is left.
+        assertEquals(-90f, compassAngleDegrees(180f, 180f), .001f) // South is ahead.
+    }
+
     @Test fun rendersDistinctDayAndNightInstrumentFaces() {
         val renderer = DashboardRenderer(RuntimeEnvironment.getApplication())
         repeat(48) { renderer.record(SimulationRoute.sample(it)) }

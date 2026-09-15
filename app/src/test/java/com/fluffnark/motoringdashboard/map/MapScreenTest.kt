@@ -32,7 +32,7 @@ class MapScreenTest {
         assertTrue(template.contentTemplate is PaneTemplate)
         val pane = (template.contentTemplate as PaneTemplate).pane
         assertEquals(1, pane.rows.size)
-        assertEquals("GPS", pane.rows.single().title.toString())
+        assertEquals("±11 FT  ·  0.0 MI", pane.rows.single().title.toString())
         assertEquals(2, template.actionStrip!!.actions.size)
         assertNull(template.mapController)
         template.actionStrip!!.actions.forEach {

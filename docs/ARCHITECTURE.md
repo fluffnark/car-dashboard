@@ -1,8 +1,8 @@
 # Architecture
 
-`DashboardCarAppService` creates a `DashboardSession` whose root `MapScreen` supplies Android Auto's host-rendered `MapWithContentTemplate`, persistent action strip, and checklist. The class name remains for compatibility with the prototype history; there is no map renderer in 0.9.0.
+`DashboardCarAppService` creates a `DashboardSession` whose root `MapScreen` supplies Android Auto's host-rendered `MapWithContentTemplate`, persistent action strip, and checklist. The class name remains for compatibility with the prototype history; there is no map renderer in 0.10.0.
 
-`DashboardSurface` receives the official Android Auto `Surface` through `AppManager.setSurfaceCallback`. A dedicated `HandlerThread` locks its canvas only when data, theme, surface geometry, or the minute changes. Pending telemetry frames are coalesced and limited to one per second. `DashboardRenderer` draws the Instrument Sans speed dial, compass, clock, elevation trace, altitude, grade, trip, GPS accuracy, and available vehicle values directly to that canvas.
+`DashboardSurface` receives the official Android Auto `Surface` through `AppManager.setSurfaceCallback`. A dedicated `HandlerThread` locks its canvas only when data, theme, surface geometry, or the minute changes. Pending telemetry frames are coalesced and limited to one per second. `DashboardRenderer` draws the Instrument Sans speed dial, rotating compass card, clock, full-trip distance/elevation profile, altitude, grade, trip, and available vehicle values directly to that canvas. `TripElevationProfile` adaptively decimates only when necessary so long trips retain their complete horizontal context without unbounded memory growth.
 
 This replaces the former MapLibre `MapView`, `VirtualDisplay`, `Presentation`, network tile pipeline, and continuous camera rendering. The host-owned `Surface` is never released by the app; it is simply forgotten when Android Auto destroys it. Rendering exceptions caused by a concurrent host surface replacement are contained to the dropped frame.
 
@@ -15,7 +15,8 @@ Data remains separated by responsibility:
 - `GoogleTasksSync`: explicit phone-side push/pull reconciliation through Google Tasks REST
 - `DisplayPreferences`: persistent Night/Auto/Day selection; Night is the first-run default
 - `SimulationRoute`: debug-only repeatable US-550 drive
-- `DashboardRenderer`: instrument composition plus bounded elevation history
+- `DashboardRenderer`: instrument composition and full-trip elevation rendering
+- `TripElevationProfile`: distance-aware elevation history with adaptive decimation
 
 The canvas is display-only. All interaction remains in Android Auto host templates, which own focus, rotary navigation, touch, safety restrictions, and action sizing.
 

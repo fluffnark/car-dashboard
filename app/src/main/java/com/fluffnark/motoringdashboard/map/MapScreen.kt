@@ -22,6 +22,7 @@ import com.fluffnark.motoringdashboard.debug.SimulationRoute
 import com.fluffnark.motoringdashboard.trip.TripListRepository
 import com.fluffnark.motoringdashboard.trip.TripListStore
 import androidx.core.graphics.drawable.IconCompat
+import kotlin.math.roundToInt
 
 class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver {
     val surface = DashboardSurface(context).apply {
@@ -49,6 +50,7 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
     )
     private var hasPosition = useDemo
     private var step = 0
+    private var displayedTripMile = telemetry.tripMiles.toInt()
     private var content = Content.DASHBOARD
     private var vehicle = VehicleData()
     private val tripList: TripListStore = TripListRepository(context)
@@ -112,8 +114,8 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
     private fun instruments(): PaneTemplate = PaneTemplate.Builder(Pane.Builder()
         .addRow(Row.Builder()
             // MapWithContentTemplate requires non-empty host content. Keep its unavoidable
-            // panel compact and meaningful instead of showing an apparently empty bar.
-            .setTitle("GPS")
+            // panel compact and use it for two location readings instead of a filler label.
+            .setTitle(locationSummary())
             .build())
         .apply {
             if (!useDemo && !hasLocation()) addAction(Action.Builder().setTitle("Allow location")
@@ -149,10 +151,19 @@ class MapScreen(context: CarContext) : Screen(context), DefaultLifecycleObserver
 
     private fun acceptTelemetry(value: DriveTelemetry) {
         val firstPosition = !hasPosition
+        val tripMileChanged = value.tripMiles.toInt() != displayedTripMile
         telemetry = value
         hasPosition = true
+        displayedTripMile = value.tripMiles.toInt()
         surface.update(value)
-        if (firstPosition) invalidate()
+        if (firstPosition || tripMileChanged) invalidate()
+    }
+
+    private fun locationSummary(): String {
+        val accuracy = telemetry.accuracyFeet?.roundToInt()?.let { "±$it FT" } ?: "LOCATING"
+        val distance = if (telemetry.tripMiles < 10f) "%.1f".format(telemetry.tripMiles)
+            else telemetry.tripMiles.roundToInt().toString()
+        return "$accuracy  ·  $distance MI"
     }
 
     private enum class Content { DASHBOARD, TRIP_LIST }

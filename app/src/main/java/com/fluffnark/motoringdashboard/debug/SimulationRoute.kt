@@ -21,7 +21,8 @@ object SimulationRoute {
         val previous = route[(index - 1).mod(route.size)]
         val speed = listOf(0f, 18f, 31f, 42f, 38f, 29f, 34f, 25f)[index]
         return DriveTelemetry(point.lat, point.lon, speed, point.heading, point.elevation,
-            index * 1.15f, if (index == 0) 0f else (point.elevation - previous.elevation) / 6072f * 100f,
+            step.coerceAtLeast(0) * 1.15f,
+            if (index == 0) 0f else (point.elevation - previous.elevation) / 6072f * 100f,
             if (index < 3) "Main Street · Ouray" else "US-550 · Million Dollar Highway",
             accuracyFeet = 11f + index, demo = true)
     }

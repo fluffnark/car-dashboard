@@ -263,10 +263,16 @@ class DashboardRenderer(context: Context) {
         val axis = paint(p.muted, alpha = 135, stroke = 1.4f * scale)
         canvas.drawLine(left, top, left, bottom, axis)
         canvas.drawLine(left, bottom, right, bottom, axis)
-        rightText(canvas, "${high.roundToInt()}", left - 7f * scale,
-            top + 4f * scale, 10f * scale, p.muted, bold = true)
-        rightText(canvas, "${low.roundToInt()}", left - 7f * scale,
-            bottom + 3f * scale, 10f * scale, p.muted, bold = true)
+        val firstTick = ceil(low / 1_000f).toInt() * 1_000
+        var tick = firstTick
+        while (tick <= high.toInt()) {
+            val y = projectY(tick.toFloat(), top, bottom, low, high)
+            canvas.drawLine(left, y, right, y,
+                paint(p.muted, alpha = if (p.dark) 42 else 48, stroke = 1f * scale))
+            rightText(canvas, elevationTick(tick), left - 7f * scale,
+                y + 4f * scale, 10f * scale, p.muted, bold = true)
+            tick += 1_000
+        }
         text(canvas, "FT", left + 6f * scale, top + 12f * scale,
             9f * scale, p.muted, bold = true)
         text(canvas, "0", left, bottom + 17f * scale, 10f * scale, p.muted, bold = true)
@@ -288,6 +294,8 @@ class DashboardRenderer(context: Context) {
 
     private fun axisDistance(miles: Float): String =
         if (miles < 10f) "%.1f".format(miles) else miles.roundToInt().toString()
+
+    private fun elevationTick(feet: Int): String = "${feet / 1_000}k"
 
     private fun paint(color: Int, alpha: Int = 255, stroke: Float? = null) =
         Paint(Paint.ANTI_ALIAS_FLAG).apply {

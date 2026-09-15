@@ -1,6 +1,6 @@
 # Motoring Dashboard
 
-Motoring Dashboard is a low-distraction Android Auto instrument prototype for a Pixel 7/7a projected to a 2021 Mazda CX-5 Grand Touring. Version 0.10.0 presents a calm, mid-century-modern dashboard drawn directly on Android Auto's official car surface.
+Motoring Dashboard is a low-distraction Android Auto instrument prototype for a Pixel 7/7a projected to a 2021 Mazda CX-5 Grand Touring. Version 0.10.1 presents a calm, mid-century-modern dashboard drawn directly on Android Auto's official car surface.
 
 ## Current concept
 
@@ -30,20 +30,20 @@ Requirements: JDK 17 and Android SDK 36.
 Outputs:
 
 - Debug APK: `app/build/outputs/apk/debug/app-debug.apk`
-- Signed release APK: `releases/motoring-dashboard-v0.10.0.apk`
-- Signed Play bundle: `releases/motoring-dashboard-v0.10.0.aab` (version code 17)
+- Signed release APK: `releases/motoring-dashboard-v0.10.1.apk`
+- Signed Play bundle: `releases/motoring-dashboard-v0.10.1.aab` (version code 18)
 
 The ignored `signing/` directory contains the existing Play upload key. Keep it backed up; future Play updates must use that key.
 
 ## Run on Pixel 7 / 7a and Mazda
 
-1. Upload the 0.10.0 AAB to the existing Play internal-test track, or install the signed APK.
+1. Upload the 0.10.1 AAB to the existing Play internal-test track, or install the signed APK.
 2. Open the phone app once, select the car-display palette, and add or sync trip-list items.
 3. In Android Auto, enable **Motoring Dashboard** under **Customize launcher**, then reconnect USB.
 4. Open Motoring Dashboard and grant location and optional vehicle-data permissions.
 5. Turn the Mazda Commander knob to move the visible focus ring; press it to activate the checklist or Voice action.
 
-The custom surface currently requires Android Auto's map-template capability and is packaged as a POI prototype. Version 0.10.0 intentionally has no map or POI browser, so it is suitable for internal design testing but is not ready for public POI-category review. It already declares the POI/map category and uses `MapWithContentTemplate`; Android Auto still owns dashboard/split-screen placement. Declaring navigation merely to displace another map would violate category requirements. A media-category build would pair with navigation, but Android Auto would replace this custom artwork with its media templates.
+The custom surface currently requires Android Auto's map-template capability and is packaged as a POI prototype. Version 0.10.1 intentionally has no map or POI browser, so it is suitable for internal design testing but is not ready for public POI-category review. It already declares the POI/map category and uses `MapWithContentTemplate`; Android Auto still owns dashboard/split-screen placement. Declaring navigation merely to displace another map would violate category requirements. A media-category build would pair with navigation, but Android Auto would replace this custom artwork with its media templates.
 
 ## Desktop Head Unit
 
